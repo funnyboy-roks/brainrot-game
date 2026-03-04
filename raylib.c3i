@@ -1,0 +1,3709 @@
+module raylib::rl;
+
+const VERSION_MAJOR = 5;
+const VERSION_MINOR = 6;
+const VERSION_PATCH = 0;
+const VERSION = "5.6-dev";
+const PI = 3.14159265358979323846f;
+const DEG2RAD = (PI/180.0f);
+const RAD2DEG = (180.0f/PI);
+const LIGHTGRAY = (Color){ 200, 200, 200, 255 };
+const GRAY = (Color){ 130, 130, 130, 255 };
+const DARKGRAY = (Color){ 80, 80, 80, 255 };
+const YELLOW = (Color){ 253, 249, 0, 255 };
+const GOLD = (Color){ 255, 203, 0, 255 };
+const ORANGE = (Color){ 255, 161, 0, 255 };
+const PINK = (Color){ 255, 109, 194, 255 };
+const RED = (Color){ 230, 41, 55, 255 };
+const MAROON = (Color){ 190, 33, 55, 255 };
+const GREEN = (Color){ 0, 228, 48, 255 };
+const LIME = (Color){ 0, 158, 47, 255 };
+const DARKGREEN = (Color){ 0, 117, 44, 255 };
+const SKYBLUE = (Color){ 102, 191, 255, 255 };
+const BLUE = (Color){ 0, 121, 241, 255 };
+const DARKBLUE = (Color){ 0, 82, 172, 255 };
+const PURPLE = (Color){ 200, 122, 255, 255 };
+const VIOLET = (Color){ 135, 60, 190, 255 };
+const DARKPURPLE = (Color){ 112, 31, 126, 255 };
+const BEIGE = (Color){ 211, 176, 131, 255 };
+const BROWN = (Color){ 127, 106, 79, 255 };
+const DARKBROWN = (Color){ 76, 63, 47, 255 };
+const WHITE = (Color){ 255, 255, 255, 255 };
+const BLACK = (Color){ 0, 0, 0, 255 };
+const BLANK = (Color){ 0, 0, 0, 0 };
+const MAGENTA = (Color){ 255, 0, 255, 255 };
+const RAYWHITE = (Color){ 245, 245, 245, 255 };
+
+struct Vector2 {
+  float x;
+  float y;
+}
+
+struct Vector3 {
+  float x;
+  float y;
+  float z;
+}
+
+struct Vector4 {
+  float x;
+  float y;
+  float z;
+  float w;
+}
+
+alias Quaternion = Vector4;
+
+struct Matrix {
+  float m0;
+  float m4;
+  float m8;
+  float m12;
+  float m1;
+  float m5;
+  float m9;
+  float m13;
+  float m2;
+  float m6;
+  float m10;
+  float m14;
+  float m3;
+  float m7;
+  float m11;
+  float m15;
+}
+
+struct Color {
+  char r;
+  char g;
+  char b;
+  char a;
+}
+
+struct Rectangle {
+  float x;
+  float y;
+  float width;
+  float height;
+}
+
+struct Image {
+  void* data;
+  CInt width;
+  CInt height;
+  CInt mipmaps;
+  CInt format;
+}
+
+struct Texture {
+  CUInt id;
+  CInt width;
+  CInt height;
+  CInt mipmaps;
+  CInt format;
+}
+
+alias Texture2D = Texture;
+
+alias TextureCubemap = Texture;
+
+struct RenderTexture {
+  CUInt id;
+  Texture texture;
+  Texture depth;
+}
+
+alias RenderTexture2D = RenderTexture;
+
+struct NPatchInfo {
+  Rectangle source;
+  CInt left;
+  CInt top;
+  CInt right;
+  CInt bottom;
+  CInt layout;
+}
+
+struct GlyphInfo {
+  CInt value;
+  CInt offsetX;
+  CInt offsetY;
+  CInt advanceX;
+  Image image;
+}
+
+struct Font {
+  CInt baseSize;
+  CInt glyphCount;
+  CInt glyphPadding;
+  Texture2D texture;
+  Rectangle* recs;
+  GlyphInfo* glyphs;
+}
+
+struct Camera3D {
+  Vector3 position;
+  Vector3 target;
+  Vector3 up;
+  float fovy;
+  CInt projection;
+}
+
+alias Camera = Camera3D;
+
+struct Camera2D {
+  Vector2 offset;
+  Vector2 target;
+  float rotation;
+  float zoom;
+}
+
+struct Mesh {
+  CInt vertexCount;
+  CInt triangleCount;
+  float* vertices;
+  float* texcoords;
+  float* texcoords2;
+  float* normals;
+  float* tangents;
+  char* colors;
+  CUShort* indices;
+  float* animVertices;
+  float* animNormals;
+  char* boneIds;
+  float* boneWeights;
+  Matrix* boneMatrices;
+  CInt boneCount;
+  CUInt vaoId;
+  CUInt* vboId;
+}
+
+struct Shader {
+  CUInt id;
+  CInt* locs;
+}
+
+struct MaterialMap {
+  Texture2D texture;
+  Color color;
+  float value;
+}
+
+struct Material {
+  Shader shader;
+  MaterialMap* maps;
+  float[4] params;
+}
+
+struct Transform {
+  Vector3 translation;
+  Quaternion rotation;
+  Vector3 scale;
+}
+
+struct BoneInfo {
+  CChar[32] name;
+  CInt parent;
+}
+
+struct Model {
+  Matrix transform;
+  CInt meshCount;
+  CInt materialCount;
+  Mesh* meshes;
+  Material* materials;
+  CInt* meshMaterial;
+  CInt boneCount;
+  BoneInfo* bones;
+  Transform* bindPose;
+}
+
+struct ModelAnimation {
+  CInt boneCount;
+  CInt frameCount;
+  BoneInfo* bones;
+  Transform** framePoses;
+  CChar[32] name;
+}
+
+struct Ray {
+  Vector3 position;
+  Vector3 direction;
+}
+
+struct RayCollision {
+  bool hit;
+  float distance;
+  Vector3 point;
+  Vector3 normal;
+}
+
+struct BoundingBox {
+  Vector3 min;
+  Vector3 max;
+}
+
+struct Wave {
+  CUInt frameCount;
+  CUInt sampleRate;
+  CUInt sampleSize;
+  CUInt channels;
+  void* data;
+}
+
+alias RAudioBuffer = void;
+
+alias RAudioProcessor = void;
+
+struct AudioStream {
+  RAudioBuffer* buffer;
+  RAudioProcessor* processor;
+  CUInt sampleRate;
+  CUInt sampleSize;
+  CUInt channels;
+}
+
+struct Sound {
+  AudioStream stream;
+  CUInt frameCount;
+}
+
+struct Music {
+  AudioStream stream;
+  CUInt frameCount;
+  bool looping;
+  CInt ctxType;
+  void* ctxData;
+}
+
+struct VrDeviceInfo {
+  CInt hResolution;
+  CInt vResolution;
+  float hScreenSize;
+  float vScreenSize;
+  float eyeToScreenDistance;
+  float lensSeparationDistance;
+  float interpupillaryDistance;
+  float[4] lensDistortionValues;
+  float[4] chromaAbCorrection;
+}
+
+struct VrStereoConfig {
+  Matrix[2] projection;
+  Matrix[2] viewOffset;
+  float[2] leftLensCenter;
+  float[2] rightLensCenter;
+  float[2] leftScreenCenter;
+  float[2] rightScreenCenter;
+  float[2] scale;
+  float[2] scaleIn;
+}
+
+struct FilePathList {
+  CUInt capacity;
+  CUInt count;
+  CChar** paths;
+}
+
+struct AutomationEvent {
+  CUInt frame;
+  CUInt type;
+  CInt[4] params;
+}
+
+struct AutomationEventList {
+  CUInt capacity;
+  CUInt count;
+  AutomationEvent* events;
+}
+
+typedef ConfigFlags = inline CUInt;
+const ConfigFlags FLAG_VSYNC_HINT = 0x00000040;
+const ConfigFlags FLAG_FULLSCREEN_MODE = 0x00000002;
+const ConfigFlags FLAG_WINDOW_RESIZABLE = 0x00000004;
+const ConfigFlags FLAG_WINDOW_UNDECORATED = 0x00000008;
+const ConfigFlags FLAG_WINDOW_HIDDEN = 0x00000080;
+const ConfigFlags FLAG_WINDOW_MINIMIZED = 0x00000200;
+const ConfigFlags FLAG_WINDOW_MAXIMIZED = 0x00000400;
+const ConfigFlags FLAG_WINDOW_UNFOCUSED = 0x00000800;
+const ConfigFlags FLAG_WINDOW_TOPMOST = 0x00001000;
+const ConfigFlags FLAG_WINDOW_ALWAYS_RUN = 0x00000100;
+const ConfigFlags FLAG_WINDOW_TRANSPARENT = 0x00000010;
+const ConfigFlags FLAG_WINDOW_HIGHDPI = 0x00002000;
+const ConfigFlags FLAG_WINDOW_MOUSE_PASSTHROUGH = 0x00004000;
+const ConfigFlags FLAG_BORDERLESS_WINDOWED_MODE = 0x00008000;
+const ConfigFlags FLAG_MSAA_4X_HINT = 0x00000020;
+const ConfigFlags FLAG_INTERLACED_HINT = 0x00010000;
+
+typedef TraceLogLevel = inline CUInt;
+const TraceLogLevel LOG_ALL = 0;
+const TraceLogLevel LOG_TRACE = 1;
+const TraceLogLevel LOG_DEBUG = 2;
+const TraceLogLevel LOG_INFO = 3;
+const TraceLogLevel LOG_WARNING = 4;
+const TraceLogLevel LOG_ERROR = 5;
+const TraceLogLevel LOG_FATAL = 6;
+const TraceLogLevel LOG_NONE = 7;
+
+typedef KeyboardKey = inline CUInt;
+const KeyboardKey KEY_NULL = 0;
+const KeyboardKey KEY_APOSTROPHE = 39;
+const KeyboardKey KEY_COMMA = 44;
+const KeyboardKey KEY_MINUS = 45;
+const KeyboardKey KEY_PERIOD = 46;
+const KeyboardKey KEY_SLASH = 47;
+const KeyboardKey KEY_ZERO = 48;
+const KeyboardKey KEY_ONE = 49;
+const KeyboardKey KEY_TWO = 50;
+const KeyboardKey KEY_THREE = 51;
+const KeyboardKey KEY_FOUR = 52;
+const KeyboardKey KEY_FIVE = 53;
+const KeyboardKey KEY_SIX = 54;
+const KeyboardKey KEY_SEVEN = 55;
+const KeyboardKey KEY_EIGHT = 56;
+const KeyboardKey KEY_NINE = 57;
+const KeyboardKey KEY_SEMICOLON = 59;
+const KeyboardKey KEY_EQUAL = 61;
+const KeyboardKey KEY_A = 65;
+const KeyboardKey KEY_B = 66;
+const KeyboardKey KEY_C = 67;
+const KeyboardKey KEY_D = 68;
+const KeyboardKey KEY_E = 69;
+const KeyboardKey KEY_F = 70;
+const KeyboardKey KEY_G = 71;
+const KeyboardKey KEY_H = 72;
+const KeyboardKey KEY_I = 73;
+const KeyboardKey KEY_J = 74;
+const KeyboardKey KEY_K = 75;
+const KeyboardKey KEY_L = 76;
+const KeyboardKey KEY_M = 77;
+const KeyboardKey KEY_N = 78;
+const KeyboardKey KEY_O = 79;
+const KeyboardKey KEY_P = 80;
+const KeyboardKey KEY_Q = 81;
+const KeyboardKey KEY_R = 82;
+const KeyboardKey KEY_S = 83;
+const KeyboardKey KEY_T = 84;
+const KeyboardKey KEY_U = 85;
+const KeyboardKey KEY_V = 86;
+const KeyboardKey KEY_W = 87;
+const KeyboardKey KEY_X = 88;
+const KeyboardKey KEY_Y = 89;
+const KeyboardKey KEY_Z = 90;
+const KeyboardKey KEY_LEFT_BRACKET = 91;
+const KeyboardKey KEY_BACKSLASH = 92;
+const KeyboardKey KEY_RIGHT_BRACKET = 93;
+const KeyboardKey KEY_GRAVE = 96;
+const KeyboardKey KEY_SPACE = 32;
+const KeyboardKey KEY_ESCAPE = 256;
+const KeyboardKey KEY_ENTER = 257;
+const KeyboardKey KEY_TAB = 258;
+const KeyboardKey KEY_BACKSPACE = 259;
+const KeyboardKey KEY_INSERT = 260;
+const KeyboardKey KEY_DELETE = 261;
+const KeyboardKey KEY_RIGHT = 262;
+const KeyboardKey KEY_LEFT = 263;
+const KeyboardKey KEY_DOWN = 264;
+const KeyboardKey KEY_UP = 265;
+const KeyboardKey KEY_PAGE_UP = 266;
+const KeyboardKey KEY_PAGE_DOWN = 267;
+const KeyboardKey KEY_HOME = 268;
+const KeyboardKey KEY_END = 269;
+const KeyboardKey KEY_CAPS_LOCK = 280;
+const KeyboardKey KEY_SCROLL_LOCK = 281;
+const KeyboardKey KEY_NUM_LOCK = 282;
+const KeyboardKey KEY_PRINT_SCREEN = 283;
+const KeyboardKey KEY_PAUSE = 284;
+const KeyboardKey KEY_F1 = 290;
+const KeyboardKey KEY_F2 = 291;
+const KeyboardKey KEY_F3 = 292;
+const KeyboardKey KEY_F4 = 293;
+const KeyboardKey KEY_F5 = 294;
+const KeyboardKey KEY_F6 = 295;
+const KeyboardKey KEY_F7 = 296;
+const KeyboardKey KEY_F8 = 297;
+const KeyboardKey KEY_F9 = 298;
+const KeyboardKey KEY_F10 = 299;
+const KeyboardKey KEY_F11 = 300;
+const KeyboardKey KEY_F12 = 301;
+const KeyboardKey KEY_LEFT_SHIFT = 340;
+const KeyboardKey KEY_LEFT_CONTROL = 341;
+const KeyboardKey KEY_LEFT_ALT = 342;
+const KeyboardKey KEY_LEFT_SUPER = 343;
+const KeyboardKey KEY_RIGHT_SHIFT = 344;
+const KeyboardKey KEY_RIGHT_CONTROL = 345;
+const KeyboardKey KEY_RIGHT_ALT = 346;
+const KeyboardKey KEY_RIGHT_SUPER = 347;
+const KeyboardKey KEY_KB_MENU = 348;
+const KeyboardKey KEY_KP_0 = 320;
+const KeyboardKey KEY_KP_1 = 321;
+const KeyboardKey KEY_KP_2 = 322;
+const KeyboardKey KEY_KP_3 = 323;
+const KeyboardKey KEY_KP_4 = 324;
+const KeyboardKey KEY_KP_5 = 325;
+const KeyboardKey KEY_KP_6 = 326;
+const KeyboardKey KEY_KP_7 = 327;
+const KeyboardKey KEY_KP_8 = 328;
+const KeyboardKey KEY_KP_9 = 329;
+const KeyboardKey KEY_KP_DECIMAL = 330;
+const KeyboardKey KEY_KP_DIVIDE = 331;
+const KeyboardKey KEY_KP_MULTIPLY = 332;
+const KeyboardKey KEY_KP_SUBTRACT = 333;
+const KeyboardKey KEY_KP_ADD = 334;
+const KeyboardKey KEY_KP_ENTER = 335;
+const KeyboardKey KEY_KP_EQUAL = 336;
+const KeyboardKey KEY_BACK = 4;
+const KeyboardKey KEY_MENU = 5;
+const KeyboardKey KEY_VOLUME_UP = 24;
+const KeyboardKey KEY_VOLUME_DOWN = 25;
+
+typedef MouseButton = inline CUInt;
+const MouseButton MOUSE_BUTTON_LEFT = 0;
+const MouseButton MOUSE_BUTTON_RIGHT = 1;
+const MouseButton MOUSE_BUTTON_MIDDLE = 2;
+const MouseButton MOUSE_BUTTON_SIDE = 3;
+const MouseButton MOUSE_BUTTON_EXTRA = 4;
+const MouseButton MOUSE_BUTTON_FORWARD = 5;
+const MouseButton MOUSE_BUTTON_BACK = 6;
+
+typedef MouseCursor = inline CUInt;
+const MouseCursor MOUSE_CURSOR_DEFAULT = 0;
+const MouseCursor MOUSE_CURSOR_ARROW = 1;
+const MouseCursor MOUSE_CURSOR_IBEAM = 2;
+const MouseCursor MOUSE_CURSOR_CROSSHAIR = 3;
+const MouseCursor MOUSE_CURSOR_POINTING_HAND = 4;
+const MouseCursor MOUSE_CURSOR_RESIZE_EW = 5;
+const MouseCursor MOUSE_CURSOR_RESIZE_NS = 6;
+const MouseCursor MOUSE_CURSOR_RESIZE_NWSE = 7;
+const MouseCursor MOUSE_CURSOR_RESIZE_NESW = 8;
+const MouseCursor MOUSE_CURSOR_RESIZE_ALL = 9;
+const MouseCursor MOUSE_CURSOR_NOT_ALLOWED = 10;
+
+typedef GamepadButton = inline CUInt;
+const GamepadButton GAMEPAD_BUTTON_UNKNOWN = 0;
+const GamepadButton GAMEPAD_BUTTON_LEFT_FACE_UP = 1;
+const GamepadButton GAMEPAD_BUTTON_LEFT_FACE_RIGHT = 2;
+const GamepadButton GAMEPAD_BUTTON_LEFT_FACE_DOWN = 3;
+const GamepadButton GAMEPAD_BUTTON_LEFT_FACE_LEFT = 4;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_FACE_UP = 5;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_FACE_RIGHT = 6;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_FACE_DOWN = 7;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_FACE_LEFT = 8;
+const GamepadButton GAMEPAD_BUTTON_LEFT_TRIGGER_1 = 9;
+const GamepadButton GAMEPAD_BUTTON_LEFT_TRIGGER_2 = 10;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_TRIGGER_1 = 11;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_TRIGGER_2 = 12;
+const GamepadButton GAMEPAD_BUTTON_MIDDLE_LEFT = 13;
+const GamepadButton GAMEPAD_BUTTON_MIDDLE = 14;
+const GamepadButton GAMEPAD_BUTTON_MIDDLE_RIGHT = 15;
+const GamepadButton GAMEPAD_BUTTON_LEFT_THUMB = 16;
+const GamepadButton GAMEPAD_BUTTON_RIGHT_THUMB = 17;
+
+typedef GamepadAxis = inline CUInt;
+const GamepadAxis GAMEPAD_AXIS_LEFT_X = 0;
+const GamepadAxis GAMEPAD_AXIS_LEFT_Y = 1;
+const GamepadAxis GAMEPAD_AXIS_RIGHT_X = 2;
+const GamepadAxis GAMEPAD_AXIS_RIGHT_Y = 3;
+const GamepadAxis GAMEPAD_AXIS_LEFT_TRIGGER = 4;
+const GamepadAxis GAMEPAD_AXIS_RIGHT_TRIGGER = 5;
+
+typedef MaterialMapIndex = inline CUInt;
+const MaterialMapIndex MATERIAL_MAP_ALBEDO = 0;
+const MaterialMapIndex MATERIAL_MAP_METALNESS = 1;
+const MaterialMapIndex MATERIAL_MAP_NORMAL = 2;
+const MaterialMapIndex MATERIAL_MAP_ROUGHNESS = 3;
+const MaterialMapIndex MATERIAL_MAP_OCCLUSION = 4;
+const MaterialMapIndex MATERIAL_MAP_EMISSION = 5;
+const MaterialMapIndex MATERIAL_MAP_HEIGHT = 6;
+const MaterialMapIndex MATERIAL_MAP_CUBEMAP = 7;
+const MaterialMapIndex MATERIAL_MAP_IRRADIANCE = 8;
+const MaterialMapIndex MATERIAL_MAP_PREFILTER = 9;
+const MaterialMapIndex MATERIAL_MAP_BRDF = 10;
+
+typedef ShaderLocationIndex = inline CUInt;
+const ShaderLocationIndex SHADER_LOC_VERTEX_POSITION = 0;
+const ShaderLocationIndex SHADER_LOC_VERTEX_TEXCOORD01 = 1;
+const ShaderLocationIndex SHADER_LOC_VERTEX_TEXCOORD02 = 2;
+const ShaderLocationIndex SHADER_LOC_VERTEX_NORMAL = 3;
+const ShaderLocationIndex SHADER_LOC_VERTEX_TANGENT = 4;
+const ShaderLocationIndex SHADER_LOC_VERTEX_COLOR = 5;
+const ShaderLocationIndex SHADER_LOC_MATRIX_MVP = 6;
+const ShaderLocationIndex SHADER_LOC_MATRIX_VIEW = 7;
+const ShaderLocationIndex SHADER_LOC_MATRIX_PROJECTION = 8;
+const ShaderLocationIndex SHADER_LOC_MATRIX_MODEL = 9;
+const ShaderLocationIndex SHADER_LOC_MATRIX_NORMAL = 10;
+const ShaderLocationIndex SHADER_LOC_VECTOR_VIEW = 11;
+const ShaderLocationIndex SHADER_LOC_COLOR_DIFFUSE = 12;
+const ShaderLocationIndex SHADER_LOC_COLOR_SPECULAR = 13;
+const ShaderLocationIndex SHADER_LOC_COLOR_AMBIENT = 14;
+const ShaderLocationIndex SHADER_LOC_MAP_ALBEDO = 15;
+const ShaderLocationIndex SHADER_LOC_MAP_METALNESS = 16;
+const ShaderLocationIndex SHADER_LOC_MAP_NORMAL = 17;
+const ShaderLocationIndex SHADER_LOC_MAP_ROUGHNESS = 18;
+const ShaderLocationIndex SHADER_LOC_MAP_OCCLUSION = 19;
+const ShaderLocationIndex SHADER_LOC_MAP_EMISSION = 20;
+const ShaderLocationIndex SHADER_LOC_MAP_HEIGHT = 21;
+const ShaderLocationIndex SHADER_LOC_MAP_CUBEMAP = 22;
+const ShaderLocationIndex SHADER_LOC_MAP_IRRADIANCE = 23;
+const ShaderLocationIndex SHADER_LOC_MAP_PREFILTER = 24;
+const ShaderLocationIndex SHADER_LOC_MAP_BRDF = 25;
+const ShaderLocationIndex SHADER_LOC_VERTEX_BONEIDS = 26;
+const ShaderLocationIndex SHADER_LOC_VERTEX_BONEWEIGHTS = 27;
+const ShaderLocationIndex SHADER_LOC_BONE_MATRICES = 28;
+const ShaderLocationIndex SHADER_LOC_VERTEX_INSTANCE_TX = 29;
+
+typedef ShaderUniformDataType = inline CUInt;
+const ShaderUniformDataType SHADER_UNIFORM_FLOAT = 0;
+const ShaderUniformDataType SHADER_UNIFORM_VEC2 = 1;
+const ShaderUniformDataType SHADER_UNIFORM_VEC3 = 2;
+const ShaderUniformDataType SHADER_UNIFORM_VEC4 = 3;
+const ShaderUniformDataType SHADER_UNIFORM_INT = 4;
+const ShaderUniformDataType SHADER_UNIFORM_IVEC2 = 5;
+const ShaderUniformDataType SHADER_UNIFORM_IVEC3 = 6;
+const ShaderUniformDataType SHADER_UNIFORM_IVEC4 = 7;
+const ShaderUniformDataType SHADER_UNIFORM_UINT = 8;
+const ShaderUniformDataType SHADER_UNIFORM_UIVEC2 = 9;
+const ShaderUniformDataType SHADER_UNIFORM_UIVEC3 = 10;
+const ShaderUniformDataType SHADER_UNIFORM_UIVEC4 = 11;
+const ShaderUniformDataType SHADER_UNIFORM_SAMPLER2D = 12;
+
+typedef ShaderAttributeDataType = inline CUInt;
+const ShaderAttributeDataType SHADER_ATTRIB_FLOAT = 0;
+const ShaderAttributeDataType SHADER_ATTRIB_VEC2 = 1;
+const ShaderAttributeDataType SHADER_ATTRIB_VEC3 = 2;
+const ShaderAttributeDataType SHADER_ATTRIB_VEC4 = 3;
+
+typedef PixelFormat = inline CUInt;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA = 2;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R5G6B5 = 3;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R8G8B8 = 4;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R5G5B5A1 = 5;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R4G4B4A4 = 6;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 = 7;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R32 = 8;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R32G32B32 = 9;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = 10;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R16 = 11;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R16G16B16 = 12;
+const PixelFormat PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = 13;
+const PixelFormat PIXELFORMAT_COMPRESSED_DXT1_RGB = 14;
+const PixelFormat PIXELFORMAT_COMPRESSED_DXT1_RGBA = 15;
+const PixelFormat PIXELFORMAT_COMPRESSED_DXT3_RGBA = 16;
+const PixelFormat PIXELFORMAT_COMPRESSED_DXT5_RGBA = 17;
+const PixelFormat PIXELFORMAT_COMPRESSED_ETC1_RGB = 18;
+const PixelFormat PIXELFORMAT_COMPRESSED_ETC2_RGB = 19;
+const PixelFormat PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 20;
+const PixelFormat PIXELFORMAT_COMPRESSED_PVRT_RGB = 21;
+const PixelFormat PIXELFORMAT_COMPRESSED_PVRT_RGBA = 22;
+const PixelFormat PIXELFORMAT_COMPRESSED_ASTC_4X4_RGBA = 23;
+const PixelFormat PIXELFORMAT_COMPRESSED_ASTC_8X8_RGBA = 24;
+
+typedef TextureFilter = inline CUInt;
+const TextureFilter TEXTURE_FILTER_POINT = 0;
+const TextureFilter TEXTURE_FILTER_BILINEAR = 1;
+const TextureFilter TEXTURE_FILTER_TRILINEAR = 2;
+const TextureFilter TEXTURE_FILTER_ANISOTROPIC_4X = 3;
+const TextureFilter TEXTURE_FILTER_ANISOTROPIC_8X = 4;
+const TextureFilter TEXTURE_FILTER_ANISOTROPIC_16X = 5;
+
+typedef TextureWrap = inline CUInt;
+const TextureWrap TEXTURE_WRAP_REPEAT = 0;
+const TextureWrap TEXTURE_WRAP_CLAMP = 1;
+const TextureWrap TEXTURE_WRAP_MIRROR_REPEAT = 2;
+const TextureWrap TEXTURE_WRAP_MIRROR_CLAMP = 3;
+
+typedef CubemapLayout = inline CUInt;
+const CubemapLayout CUBEMAP_LAYOUT_AUTO_DETECT = 0;
+const CubemapLayout CUBEMAP_LAYOUT_LINE_VERTICAL = 1;
+const CubemapLayout CUBEMAP_LAYOUT_LINE_HORIZONTAL = 2;
+const CubemapLayout CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR = 3;
+const CubemapLayout CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE = 4;
+
+typedef FontType = inline CUInt;
+const FontType FONT_DEFAULT = 0;
+const FontType FONT_BITMAP = 1;
+const FontType FONT_SDF = 2;
+
+typedef BlendMode = inline CUInt;
+const BlendMode BLEND_ALPHA = 0;
+const BlendMode BLEND_ADDITIVE = 1;
+const BlendMode BLEND_MULTIPLIED = 2;
+const BlendMode BLEND_ADD_COLORS = 3;
+const BlendMode BLEND_SUBTRACT_COLORS = 4;
+const BlendMode BLEND_ALPHA_PREMULTIPLY = 5;
+const BlendMode BLEND_CUSTOM = 6;
+const BlendMode BLEND_CUSTOM_SEPARATE = 7;
+
+typedef Gesture = inline CUInt;
+const Gesture GESTURE_NONE = 0;
+const Gesture GESTURE_TAP = 1;
+const Gesture GESTURE_DOUBLETAP = 2;
+const Gesture GESTURE_HOLD = 4;
+const Gesture GESTURE_DRAG = 8;
+const Gesture GESTURE_SWIPE_RIGHT = 16;
+const Gesture GESTURE_SWIPE_LEFT = 32;
+const Gesture GESTURE_SWIPE_UP = 64;
+const Gesture GESTURE_SWIPE_DOWN = 128;
+const Gesture GESTURE_PINCH_IN = 256;
+const Gesture GESTURE_PINCH_OUT = 512;
+
+typedef CameraMode = inline CUInt;
+const CameraMode CAMERA_CUSTOM = 0;
+const CameraMode CAMERA_FREE = 1;
+const CameraMode CAMERA_ORBITAL = 2;
+const CameraMode CAMERA_FIRST_PERSON = 3;
+const CameraMode CAMERA_THIRD_PERSON = 4;
+
+typedef CameraProjection = inline CUInt;
+const CameraProjection CAMERA_PERSPECTIVE = 0;
+const CameraProjection CAMERA_ORTHOGRAPHIC = 1;
+
+typedef NPatchLayout = inline CUInt;
+const NPatchLayout NPATCH_NINE_PATCH = 0;
+const NPatchLayout NPATCH_THREE_PATCH_VERTICAL = 1;
+const NPatchLayout NPATCH_THREE_PATCH_HORIZONTAL = 2;
+
+alias TraceLogCallback = fn void(
+  CInt logLevel,
+  CChar* text,
+  void* args);
+
+alias LoadFileDataCallback = fn char*(
+  CChar* fileName,
+  CInt* dataSize);
+
+alias SaveFileDataCallback = fn bool(
+  CChar* fileName,
+  void* data,
+  CInt dataSize);
+
+alias LoadFileTextCallback = fn CChar*(
+  CChar* fileName);
+
+alias SaveFileTextCallback = fn bool(
+  CChar* fileName,
+  CChar* text);
+
+fn void initWindow(
+  CInt width,
+  CInt height,
+  CChar* title)
+@extern("InitWindow");
+
+fn void closeWindow()
+@extern("CloseWindow");
+
+fn bool windowShouldClose()
+@extern("WindowShouldClose");
+
+fn bool isWindowReady()
+@extern("IsWindowReady");
+
+fn bool isWindowFullscreen()
+@extern("IsWindowFullscreen");
+
+fn bool isWindowHidden()
+@extern("IsWindowHidden");
+
+fn bool isWindowMinimized()
+@extern("IsWindowMinimized");
+
+fn bool isWindowMaximized()
+@extern("IsWindowMaximized");
+
+fn bool isWindowFocused()
+@extern("IsWindowFocused");
+
+fn bool isWindowResized()
+@extern("IsWindowResized");
+
+fn bool isWindowState(
+  CUInt flag)
+@extern("IsWindowState");
+
+fn void setWindowState(
+  CUInt flags)
+@extern("SetWindowState");
+
+fn void clearWindowState(
+  CUInt flags)
+@extern("ClearWindowState");
+
+fn void toggleFullscreen()
+@extern("ToggleFullscreen");
+
+fn void toggleBorderlessWindowed()
+@extern("ToggleBorderlessWindowed");
+
+fn void maximizeWindow()
+@extern("MaximizeWindow");
+
+fn void minimizeWindow()
+@extern("MinimizeWindow");
+
+fn void restoreWindow()
+@extern("RestoreWindow");
+
+fn void setWindowIcon(
+  Image image)
+@extern("SetWindowIcon");
+
+fn void setWindowIcons(
+  Image* images,
+  CInt count)
+@extern("SetWindowIcons");
+
+fn void setWindowTitle(
+  CChar* title)
+@extern("SetWindowTitle");
+
+fn void setWindowPosition(
+  CInt x,
+  CInt y)
+@extern("SetWindowPosition");
+
+fn void setWindowMonitor(
+  CInt monitor)
+@extern("SetWindowMonitor");
+
+fn void setWindowMinSize(
+  CInt width,
+  CInt height)
+@extern("SetWindowMinSize");
+
+fn void setWindowMaxSize(
+  CInt width,
+  CInt height)
+@extern("SetWindowMaxSize");
+
+fn void setWindowSize(
+  CInt width,
+  CInt height)
+@extern("SetWindowSize");
+
+fn void setWindowOpacity(
+  float opacity)
+@extern("SetWindowOpacity");
+
+fn void setWindowFocused()
+@extern("SetWindowFocused");
+
+fn void* getWindowHandle()
+@extern("GetWindowHandle");
+
+fn CInt getScreenWidth()
+@extern("GetScreenWidth");
+
+fn CInt getScreenHeight()
+@extern("GetScreenHeight");
+
+fn CInt getRenderWidth()
+@extern("GetRenderWidth");
+
+fn CInt getRenderHeight()
+@extern("GetRenderHeight");
+
+fn CInt getMonitorCount()
+@extern("GetMonitorCount");
+
+fn CInt getCurrentMonitor()
+@extern("GetCurrentMonitor");
+
+fn Vector2 getMonitorPosition(
+  CInt monitor)
+@extern("GetMonitorPosition");
+
+fn CInt getMonitorWidth(
+  CInt monitor)
+@extern("GetMonitorWidth");
+
+fn CInt getMonitorHeight(
+  CInt monitor)
+@extern("GetMonitorHeight");
+
+fn CInt getMonitorPhysicalWidth(
+  CInt monitor)
+@extern("GetMonitorPhysicalWidth");
+
+fn CInt getMonitorPhysicalHeight(
+  CInt monitor)
+@extern("GetMonitorPhysicalHeight");
+
+fn CInt getMonitorRefreshRate(
+  CInt monitor)
+@extern("GetMonitorRefreshRate");
+
+fn Vector2 getWindowPosition()
+@extern("GetWindowPosition");
+
+fn Vector2 getWindowScaleDPI()
+@extern("GetWindowScaleDPI");
+
+fn CChar* getMonitorName(
+  CInt monitor)
+@extern("GetMonitorName");
+
+fn void setClipboardText(
+  CChar* text)
+@extern("SetClipboardText");
+
+fn CChar* getClipboardText()
+@extern("GetClipboardText");
+
+fn Image getClipboardImage()
+@extern("GetClipboardImage");
+
+fn void enableEventWaiting()
+@extern("EnableEventWaiting");
+
+fn void disableEventWaiting()
+@extern("DisableEventWaiting");
+
+fn void showCursor()
+@extern("ShowCursor");
+
+fn void hideCursor()
+@extern("HideCursor");
+
+fn bool isCursorHidden()
+@extern("IsCursorHidden");
+
+fn void enableCursor()
+@extern("EnableCursor");
+
+fn void disableCursor()
+@extern("DisableCursor");
+
+fn bool isCursorOnScreen()
+@extern("IsCursorOnScreen");
+
+fn void clearBackground(
+  Color color)
+@extern("ClearBackground");
+
+fn void beginDrawing()
+@extern("BeginDrawing");
+
+fn void endDrawing()
+@extern("EndDrawing");
+
+fn void beginMode2D(
+  Camera2D camera)
+@extern("BeginMode2D");
+
+fn void endMode2D()
+@extern("EndMode2D");
+
+fn void beginMode3D(
+  Camera3D camera)
+@extern("BeginMode3D");
+
+fn void endMode3D()
+@extern("EndMode3D");
+
+fn void beginTextureMode(
+  RenderTexture2D target)
+@extern("BeginTextureMode");
+
+fn void endTextureMode()
+@extern("EndTextureMode");
+
+fn void beginShaderMode(
+  Shader shader)
+@extern("BeginShaderMode");
+
+fn void endShaderMode()
+@extern("EndShaderMode");
+
+fn void beginBlendMode(
+  CInt mode)
+@extern("BeginBlendMode");
+
+fn void endBlendMode()
+@extern("EndBlendMode");
+
+fn void beginScissorMode(
+  CInt x,
+  CInt y,
+  CInt width,
+  CInt height)
+@extern("BeginScissorMode");
+
+fn void endScissorMode()
+@extern("EndScissorMode");
+
+fn void beginVrStereoMode(
+  VrStereoConfig config)
+@extern("BeginVrStereoMode");
+
+fn void endVrStereoMode()
+@extern("EndVrStereoMode");
+
+fn VrStereoConfig loadVrStereoConfig(
+  VrDeviceInfo device)
+@extern("LoadVrStereoConfig");
+
+fn void unloadVrStereoConfig(
+  VrStereoConfig config)
+@extern("UnloadVrStereoConfig");
+
+fn Shader loadShader(
+  CChar* vsFileName,
+  CChar* fsFileName)
+@extern("LoadShader");
+
+fn Shader loadShaderFromMemory(
+  CChar* vsCode,
+  CChar* fsCode)
+@extern("LoadShaderFromMemory");
+
+fn bool isShaderValid(
+  Shader shader)
+@extern("IsShaderValid");
+
+fn CInt getShaderLocation(
+  Shader shader,
+  CChar* uniformName)
+@extern("GetShaderLocation");
+
+fn CInt getShaderLocationAttrib(
+  Shader shader,
+  CChar* attribName)
+@extern("GetShaderLocationAttrib");
+
+fn void setShaderValue(
+  Shader shader,
+  CInt locIndex,
+  void* value,
+  CInt uniformType)
+@extern("SetShaderValue");
+
+fn void setShaderValueV(
+  Shader shader,
+  CInt locIndex,
+  void* value,
+  CInt uniformType,
+  CInt count)
+@extern("SetShaderValueV");
+
+fn void setShaderValueMatrix(
+  Shader shader,
+  CInt locIndex,
+  Matrix mat)
+@extern("SetShaderValueMatrix");
+
+fn void setShaderValueTexture(
+  Shader shader,
+  CInt locIndex,
+  Texture2D texture)
+@extern("SetShaderValueTexture");
+
+fn void unloadShader(
+  Shader shader)
+@extern("UnloadShader");
+
+fn Ray getScreenToWorldRay(
+  Vector2 position,
+  Camera camera)
+@extern("GetScreenToWorldRay");
+
+fn Ray getScreenToWorldRayEx(
+  Vector2 position,
+  Camera camera,
+  CInt width,
+  CInt height)
+@extern("GetScreenToWorldRayEx");
+
+fn Vector2 getWorldToScreen(
+  Vector3 position,
+  Camera camera)
+@extern("GetWorldToScreen");
+
+fn Vector2 getWorldToScreenEx(
+  Vector3 position,
+  Camera camera,
+  CInt width,
+  CInt height)
+@extern("GetWorldToScreenEx");
+
+fn Vector2 getWorldToScreen2D(
+  Vector2 position,
+  Camera2D camera)
+@extern("GetWorldToScreen2D");
+
+fn Vector2 getScreenToWorld2D(
+  Vector2 position,
+  Camera2D camera)
+@extern("GetScreenToWorld2D");
+
+fn Matrix getCameraMatrix(
+  Camera camera)
+@extern("GetCameraMatrix");
+
+fn Matrix getCameraMatrix2D(
+  Camera2D camera)
+@extern("GetCameraMatrix2D");
+
+fn void setTargetFPS(
+  CInt fps)
+@extern("SetTargetFPS");
+
+fn float getFrameTime()
+@extern("GetFrameTime");
+
+fn double getTime()
+@extern("GetTime");
+
+fn CInt getFPS()
+@extern("GetFPS");
+
+fn void swapScreenBuffer()
+@extern("SwapScreenBuffer");
+
+fn void pollInputEvents()
+@extern("PollInputEvents");
+
+fn void waitTime(
+  double seconds)
+@extern("WaitTime");
+
+fn void setRandomSeed(
+  CUInt seed)
+@extern("SetRandomSeed");
+
+fn CInt getRandomValue(
+  CInt min,
+  CInt max)
+@extern("GetRandomValue");
+
+fn CInt* loadRandomSequence(
+  CUInt count,
+  CInt min,
+  CInt max)
+@extern("LoadRandomSequence");
+
+fn void unloadRandomSequence(
+  CInt* sequence)
+@extern("UnloadRandomSequence");
+
+fn void takeScreenshot(
+  CChar* fileName)
+@extern("TakeScreenshot");
+
+fn void setConfigFlags(
+  CUInt flags)
+@extern("SetConfigFlags");
+
+fn void openURL(
+  CChar* url)
+@extern("OpenURL");
+
+fn void traceLog(
+  CInt logLevel,
+  CChar* text)
+@extern("TraceLog");
+
+fn void setTraceLogLevel(
+  CInt logLevel)
+@extern("SetTraceLogLevel");
+
+fn void* memAlloc(
+  CUInt size)
+@extern("MemAlloc");
+
+fn void* memRealloc(
+  void* ptr,
+  CUInt size)
+@extern("MemRealloc");
+
+fn void memFree(
+  void* ptr)
+@extern("MemFree");
+
+fn void setTraceLogCallback(
+  TraceLogCallback callback)
+@extern("SetTraceLogCallback");
+
+fn void setLoadFileDataCallback(
+  LoadFileDataCallback callback)
+@extern("SetLoadFileDataCallback");
+
+fn void setSaveFileDataCallback(
+  SaveFileDataCallback callback)
+@extern("SetSaveFileDataCallback");
+
+fn void setLoadFileTextCallback(
+  LoadFileTextCallback callback)
+@extern("SetLoadFileTextCallback");
+
+fn void setSaveFileTextCallback(
+  SaveFileTextCallback callback)
+@extern("SetSaveFileTextCallback");
+
+fn char* loadFileData(
+  CChar* fileName,
+  CInt* dataSize)
+@extern("LoadFileData");
+
+fn void unloadFileData(
+  char* data)
+@extern("UnloadFileData");
+
+fn bool saveFileData(
+  CChar* fileName,
+  void* data,
+  CInt dataSize)
+@extern("SaveFileData");
+
+fn bool exportDataAsCode(
+  char* data,
+  CInt dataSize,
+  CChar* fileName)
+@extern("ExportDataAsCode");
+
+fn CChar* loadFileText(
+  CChar* fileName)
+@extern("LoadFileText");
+
+fn void unloadFileText(
+  CChar* text)
+@extern("UnloadFileText");
+
+fn bool saveFileText(
+  CChar* fileName,
+  CChar* text)
+@extern("SaveFileText");
+
+fn bool fileExists(
+  CChar* fileName)
+@extern("FileExists");
+
+fn bool directoryExists(
+  CChar* dirPath)
+@extern("DirectoryExists");
+
+fn bool isFileExtension(
+  CChar* fileName,
+  CChar* ext)
+@extern("IsFileExtension");
+
+fn CInt getFileLength(
+  CChar* fileName)
+@extern("GetFileLength");
+
+fn CChar* getFileExtension(
+  CChar* fileName)
+@extern("GetFileExtension");
+
+fn CChar* getFileName(
+  CChar* filePath)
+@extern("GetFileName");
+
+fn CChar* getFileNameWithoutExt(
+  CChar* filePath)
+@extern("GetFileNameWithoutExt");
+
+fn CChar* getDirectoryPath(
+  CChar* filePath)
+@extern("GetDirectoryPath");
+
+fn CChar* getPrevDirectoryPath(
+  CChar* dirPath)
+@extern("GetPrevDirectoryPath");
+
+fn CChar* getWorkingDirectory()
+@extern("GetWorkingDirectory");
+
+fn CChar* getApplicationDirectory()
+@extern("GetApplicationDirectory");
+
+fn CInt makeDirectory(
+  CChar* dirPath)
+@extern("MakeDirectory");
+
+fn bool changeDirectory(
+  CChar* dir)
+@extern("ChangeDirectory");
+
+fn bool isPathFile(
+  CChar* path)
+@extern("IsPathFile");
+
+fn bool isFileNameValid(
+  CChar* fileName)
+@extern("IsFileNameValid");
+
+fn FilePathList loadDirectoryFiles(
+  CChar* dirPath)
+@extern("LoadDirectoryFiles");
+
+fn FilePathList loadDirectoryFilesEx(
+  CChar* basePath,
+  CChar* filter,
+  bool scanSubdirs)
+@extern("LoadDirectoryFilesEx");
+
+fn void unloadDirectoryFiles(
+  FilePathList files)
+@extern("UnloadDirectoryFiles");
+
+fn bool isFileDropped()
+@extern("IsFileDropped");
+
+fn FilePathList loadDroppedFiles()
+@extern("LoadDroppedFiles");
+
+fn void unloadDroppedFiles(
+  FilePathList files)
+@extern("UnloadDroppedFiles");
+
+fn CLong getFileModTime(
+  CChar* fileName)
+@extern("GetFileModTime");
+
+fn char* compressData(
+  char* data,
+  CInt dataSize,
+  CInt* compDataSize)
+@extern("CompressData");
+
+fn char* decompressData(
+  char* compData,
+  CInt compDataSize,
+  CInt* dataSize)
+@extern("DecompressData");
+
+fn CChar* encodeDataBase64(
+  char* data,
+  CInt dataSize,
+  CInt* outputSize)
+@extern("EncodeDataBase64");
+
+fn char* decodeDataBase64(
+  char* data,
+  CInt* outputSize)
+@extern("DecodeDataBase64");
+
+fn CUInt computeCRC32(
+  char* data,
+  CInt dataSize)
+@extern("ComputeCRC32");
+
+fn CUInt* computeMD5(
+  char* data,
+  CInt dataSize)
+@extern("ComputeMD5");
+
+fn CUInt* computeSHA1(
+  char* data,
+  CInt dataSize)
+@extern("ComputeSHA1");
+
+fn AutomationEventList loadAutomationEventList(
+  CChar* fileName)
+@extern("LoadAutomationEventList");
+
+fn void unloadAutomationEventList(
+  AutomationEventList list)
+@extern("UnloadAutomationEventList");
+
+fn bool exportAutomationEventList(
+  AutomationEventList list,
+  CChar* fileName)
+@extern("ExportAutomationEventList");
+
+fn void setAutomationEventList(
+  AutomationEventList* list)
+@extern("SetAutomationEventList");
+
+fn void setAutomationEventBaseFrame(
+  CInt frame)
+@extern("SetAutomationEventBaseFrame");
+
+fn void startAutomationEventRecording()
+@extern("StartAutomationEventRecording");
+
+fn void stopAutomationEventRecording()
+@extern("StopAutomationEventRecording");
+
+fn void playAutomationEvent(
+  AutomationEvent event)
+@extern("PlayAutomationEvent");
+
+fn bool isKeyPressed(
+  CInt key)
+@extern("IsKeyPressed");
+
+fn bool isKeyPressedRepeat(
+  CInt key)
+@extern("IsKeyPressedRepeat");
+
+fn bool isKeyDown(
+  CInt key)
+@extern("IsKeyDown");
+
+fn bool isKeyReleased(
+  CInt key)
+@extern("IsKeyReleased");
+
+fn bool isKeyUp(
+  CInt key)
+@extern("IsKeyUp");
+
+fn CInt getKeyPressed()
+@extern("GetKeyPressed");
+
+fn CInt getCharPressed()
+@extern("GetCharPressed");
+
+fn CChar* getKeyName(
+  CInt key)
+@extern("GetKeyName");
+
+fn void setExitKey(
+  CInt key)
+@extern("SetExitKey");
+
+fn bool isGamepadAvailable(
+  CInt gamepad)
+@extern("IsGamepadAvailable");
+
+fn CChar* getGamepadName(
+  CInt gamepad)
+@extern("GetGamepadName");
+
+fn bool isGamepadButtonPressed(
+  CInt gamepad,
+  CInt button)
+@extern("IsGamepadButtonPressed");
+
+fn bool isGamepadButtonDown(
+  CInt gamepad,
+  CInt button)
+@extern("IsGamepadButtonDown");
+
+fn bool isGamepadButtonReleased(
+  CInt gamepad,
+  CInt button)
+@extern("IsGamepadButtonReleased");
+
+fn bool isGamepadButtonUp(
+  CInt gamepad,
+  CInt button)
+@extern("IsGamepadButtonUp");
+
+fn CInt getGamepadButtonPressed()
+@extern("GetGamepadButtonPressed");
+
+fn CInt getGamepadAxisCount(
+  CInt gamepad)
+@extern("GetGamepadAxisCount");
+
+fn float getGamepadAxisMovement(
+  CInt gamepad,
+  CInt axis)
+@extern("GetGamepadAxisMovement");
+
+fn CInt setGamepadMappings(
+  CChar* mappings)
+@extern("SetGamepadMappings");
+
+fn void setGamepadVibration(
+  CInt gamepad,
+  float leftMotor,
+  float rightMotor,
+  float duration)
+@extern("SetGamepadVibration");
+
+fn bool isMouseButtonPressed(
+  CInt button)
+@extern("IsMouseButtonPressed");
+
+fn bool isMouseButtonDown(
+  CInt button)
+@extern("IsMouseButtonDown");
+
+fn bool isMouseButtonReleased(
+  CInt button)
+@extern("IsMouseButtonReleased");
+
+fn bool isMouseButtonUp(
+  CInt button)
+@extern("IsMouseButtonUp");
+
+fn CInt getMouseX()
+@extern("GetMouseX");
+
+fn CInt getMouseY()
+@extern("GetMouseY");
+
+fn Vector2 getMousePosition()
+@extern("GetMousePosition");
+
+fn Vector2 getMouseDelta()
+@extern("GetMouseDelta");
+
+fn void setMousePosition(
+  CInt x,
+  CInt y)
+@extern("SetMousePosition");
+
+fn void setMouseOffset(
+  CInt offsetX,
+  CInt offsetY)
+@extern("SetMouseOffset");
+
+fn void setMouseScale(
+  float scaleX,
+  float scaleY)
+@extern("SetMouseScale");
+
+fn float getMouseWheelMove()
+@extern("GetMouseWheelMove");
+
+fn Vector2 getMouseWheelMoveV()
+@extern("GetMouseWheelMoveV");
+
+fn void setMouseCursor(
+  CInt cursor)
+@extern("SetMouseCursor");
+
+fn CInt getTouchX()
+@extern("GetTouchX");
+
+fn CInt getTouchY()
+@extern("GetTouchY");
+
+fn Vector2 getTouchPosition(
+  CInt index)
+@extern("GetTouchPosition");
+
+fn CInt getTouchPointId(
+  CInt index)
+@extern("GetTouchPointId");
+
+fn CInt getTouchPointCount()
+@extern("GetTouchPointCount");
+
+fn void setGesturesEnabled(
+  CUInt flags)
+@extern("SetGesturesEnabled");
+
+fn bool isGestureDetected(
+  CUInt gesture)
+@extern("IsGestureDetected");
+
+fn CInt getGestureDetected()
+@extern("GetGestureDetected");
+
+fn float getGestureHoldDuration()
+@extern("GetGestureHoldDuration");
+
+fn Vector2 getGestureDragVector()
+@extern("GetGestureDragVector");
+
+fn float getGestureDragAngle()
+@extern("GetGestureDragAngle");
+
+fn Vector2 getGesturePinchVector()
+@extern("GetGesturePinchVector");
+
+fn float getGesturePinchAngle()
+@extern("GetGesturePinchAngle");
+
+fn void updateCamera(
+  Camera* camera,
+  CInt mode)
+@extern("UpdateCamera");
+
+fn void updateCameraPro(
+  Camera* camera,
+  Vector3 movement,
+  Vector3 rotation,
+  float zoom)
+@extern("UpdateCameraPro");
+
+fn void setShapesTexture(
+  Texture2D texture,
+  Rectangle source)
+@extern("SetShapesTexture");
+
+fn Texture2D getShapesTexture()
+@extern("GetShapesTexture");
+
+fn Rectangle getShapesTextureRectangle()
+@extern("GetShapesTextureRectangle");
+
+fn void drawPixel(
+  CInt posX,
+  CInt posY,
+  Color color)
+@extern("DrawPixel");
+
+fn void drawPixelV(
+  Vector2 position,
+  Color color)
+@extern("DrawPixelV");
+
+fn void drawLine(
+  CInt startPosX,
+  CInt startPosY,
+  CInt endPosX,
+  CInt endPosY,
+  Color color)
+@extern("DrawLine");
+
+fn void drawLineV(
+  Vector2 startPos,
+  Vector2 endPos,
+  Color color)
+@extern("DrawLineV");
+
+fn void drawLineEx(
+  Vector2 startPos,
+  Vector2 endPos,
+  float thick,
+  Color color)
+@extern("DrawLineEx");
+
+fn void drawLineStrip(
+  Vector2* points,
+  CInt pointCount,
+  Color color)
+@extern("DrawLineStrip");
+
+fn void drawLineBezier(
+  Vector2 startPos,
+  Vector2 endPos,
+  float thick,
+  Color color)
+@extern("DrawLineBezier");
+
+fn void drawCircle(
+  CInt centerX,
+  CInt centerY,
+  float radius,
+  Color color)
+@extern("DrawCircle");
+
+fn void drawCircleSector(
+  Vector2 center,
+  float radius,
+  float startAngle,
+  float endAngle,
+  CInt segments,
+  Color color)
+@extern("DrawCircleSector");
+
+fn void drawCircleSectorLines(
+  Vector2 center,
+  float radius,
+  float startAngle,
+  float endAngle,
+  CInt segments,
+  Color color)
+@extern("DrawCircleSectorLines");
+
+fn void drawCircleGradient(
+  CInt centerX,
+  CInt centerY,
+  float radius,
+  Color inner,
+  Color outer)
+@extern("DrawCircleGradient");
+
+fn void drawCircleV(
+  Vector2 center,
+  float radius,
+  Color color)
+@extern("DrawCircleV");
+
+fn void drawCircleLines(
+  CInt centerX,
+  CInt centerY,
+  float radius,
+  Color color)
+@extern("DrawCircleLines");
+
+fn void drawCircleLinesV(
+  Vector2 center,
+  float radius,
+  Color color)
+@extern("DrawCircleLinesV");
+
+fn void drawEllipse(
+  CInt centerX,
+  CInt centerY,
+  float radiusH,
+  float radiusV,
+  Color color)
+@extern("DrawEllipse");
+
+fn void drawEllipseLines(
+  CInt centerX,
+  CInt centerY,
+  float radiusH,
+  float radiusV,
+  Color color)
+@extern("DrawEllipseLines");
+
+fn void drawRing(
+  Vector2 center,
+  float innerRadius,
+  float outerRadius,
+  float startAngle,
+  float endAngle,
+  CInt segments,
+  Color color)
+@extern("DrawRing");
+
+fn void drawRingLines(
+  Vector2 center,
+  float innerRadius,
+  float outerRadius,
+  float startAngle,
+  float endAngle,
+  CInt segments,
+  Color color)
+@extern("DrawRingLines");
+
+fn void drawRectangle(
+  CInt posX,
+  CInt posY,
+  CInt width,
+  CInt height,
+  Color color)
+@extern("DrawRectangle");
+
+fn void drawRectangleV(
+  Vector2 position,
+  Vector2 size,
+  Color color)
+@extern("DrawRectangleV");
+
+fn void drawRectangleRec(
+  Rectangle rec,
+  Color color)
+@extern("DrawRectangleRec");
+
+fn void drawRectanglePro(
+  Rectangle rec,
+  Vector2 origin,
+  float rotation,
+  Color color)
+@extern("DrawRectanglePro");
+
+fn void drawRectangleGradientV(
+  CInt posX,
+  CInt posY,
+  CInt width,
+  CInt height,
+  Color top,
+  Color bottom)
+@extern("DrawRectangleGradientV");
+
+fn void drawRectangleGradientH(
+  CInt posX,
+  CInt posY,
+  CInt width,
+  CInt height,
+  Color left,
+  Color right)
+@extern("DrawRectangleGradientH");
+
+fn void drawRectangleGradientEx(
+  Rectangle rec,
+  Color topLeft,
+  Color bottomLeft,
+  Color topRight,
+  Color bottomRight)
+@extern("DrawRectangleGradientEx");
+
+fn void drawRectangleLines(
+  CInt posX,
+  CInt posY,
+  CInt width,
+  CInt height,
+  Color color)
+@extern("DrawRectangleLines");
+
+fn void drawRectangleLinesEx(
+  Rectangle rec,
+  float lineThick,
+  Color color)
+@extern("DrawRectangleLinesEx");
+
+fn void drawRectangleRounded(
+  Rectangle rec,
+  float roundness,
+  CInt segments,
+  Color color)
+@extern("DrawRectangleRounded");
+
+fn void drawRectangleRoundedLines(
+  Rectangle rec,
+  float roundness,
+  CInt segments,
+  Color color)
+@extern("DrawRectangleRoundedLines");
+
+fn void drawRectangleRoundedLinesEx(
+  Rectangle rec,
+  float roundness,
+  CInt segments,
+  float lineThick,
+  Color color)
+@extern("DrawRectangleRoundedLinesEx");
+
+fn void drawTriangle(
+  Vector2 v1,
+  Vector2 v2,
+  Vector2 v3,
+  Color color)
+@extern("DrawTriangle");
+
+fn void drawTriangleLines(
+  Vector2 v1,
+  Vector2 v2,
+  Vector2 v3,
+  Color color)
+@extern("DrawTriangleLines");
+
+fn void drawTriangleFan(
+  Vector2* points,
+  CInt pointCount,
+  Color color)
+@extern("DrawTriangleFan");
+
+fn void drawTriangleStrip(
+  Vector2* points,
+  CInt pointCount,
+  Color color)
+@extern("DrawTriangleStrip");
+
+fn void drawPoly(
+  Vector2 center,
+  CInt sides,
+  float radius,
+  float rotation,
+  Color color)
+@extern("DrawPoly");
+
+fn void drawPolyLines(
+  Vector2 center,
+  CInt sides,
+  float radius,
+  float rotation,
+  Color color)
+@extern("DrawPolyLines");
+
+fn void drawPolyLinesEx(
+  Vector2 center,
+  CInt sides,
+  float radius,
+  float rotation,
+  float lineThick,
+  Color color)
+@extern("DrawPolyLinesEx");
+
+fn void drawSplineLinear(
+  Vector2* points,
+  CInt pointCount,
+  float thick,
+  Color color)
+@extern("DrawSplineLinear");
+
+fn void drawSplineBasis(
+  Vector2* points,
+  CInt pointCount,
+  float thick,
+  Color color)
+@extern("DrawSplineBasis");
+
+fn void drawSplineCatmullRom(
+  Vector2* points,
+  CInt pointCount,
+  float thick,
+  Color color)
+@extern("DrawSplineCatmullRom");
+
+fn void drawSplineBezierQuadratic(
+  Vector2* points,
+  CInt pointCount,
+  float thick,
+  Color color)
+@extern("DrawSplineBezierQuadratic");
+
+fn void drawSplineBezierCubic(
+  Vector2* points,
+  CInt pointCount,
+  float thick,
+  Color color)
+@extern("DrawSplineBezierCubic");
+
+fn void drawSplineSegmentLinear(
+  Vector2 p1,
+  Vector2 p2,
+  float thick,
+  Color color)
+@extern("DrawSplineSegmentLinear");
+
+fn void drawSplineSegmentBasis(
+  Vector2 p1,
+  Vector2 p2,
+  Vector2 p3,
+  Vector2 p4,
+  float thick,
+  Color color)
+@extern("DrawSplineSegmentBasis");
+
+fn void drawSplineSegmentCatmullRom(
+  Vector2 p1,
+  Vector2 p2,
+  Vector2 p3,
+  Vector2 p4,
+  float thick,
+  Color color)
+@extern("DrawSplineSegmentCatmullRom");
+
+fn void drawSplineSegmentBezierQuadratic(
+  Vector2 p1,
+  Vector2 c2,
+  Vector2 p3,
+  float thick,
+  Color color)
+@extern("DrawSplineSegmentBezierQuadratic");
+
+fn void drawSplineSegmentBezierCubic(
+  Vector2 p1,
+  Vector2 c2,
+  Vector2 c3,
+  Vector2 p4,
+  float thick,
+  Color color)
+@extern("DrawSplineSegmentBezierCubic");
+
+fn Vector2 getSplinePointLinear(
+  Vector2 startPos,
+  Vector2 endPos,
+  float t)
+@extern("GetSplinePointLinear");
+
+fn Vector2 getSplinePointBasis(
+  Vector2 p1,
+  Vector2 p2,
+  Vector2 p3,
+  Vector2 p4,
+  float t)
+@extern("GetSplinePointBasis");
+
+fn Vector2 getSplinePointCatmullRom(
+  Vector2 p1,
+  Vector2 p2,
+  Vector2 p3,
+  Vector2 p4,
+  float t)
+@extern("GetSplinePointCatmullRom");
+
+fn Vector2 getSplinePointBezierQuad(
+  Vector2 p1,
+  Vector2 c2,
+  Vector2 p3,
+  float t)
+@extern("GetSplinePointBezierQuad");
+
+fn Vector2 getSplinePointBezierCubic(
+  Vector2 p1,
+  Vector2 c2,
+  Vector2 c3,
+  Vector2 p4,
+  float t)
+@extern("GetSplinePointBezierCubic");
+
+fn bool checkCollisionRecs(
+  Rectangle rec1,
+  Rectangle rec2)
+@extern("CheckCollisionRecs");
+
+fn bool checkCollisionCircles(
+  Vector2 center1,
+  float radius1,
+  Vector2 center2,
+  float radius2)
+@extern("CheckCollisionCircles");
+
+fn bool checkCollisionCircleRec(
+  Vector2 center,
+  float radius,
+  Rectangle rec)
+@extern("CheckCollisionCircleRec");
+
+fn bool checkCollisionCircleLine(
+  Vector2 center,
+  float radius,
+  Vector2 p1,
+  Vector2 p2)
+@extern("CheckCollisionCircleLine");
+
+fn bool checkCollisionPointRec(
+  Vector2 point,
+  Rectangle rec)
+@extern("CheckCollisionPointRec");
+
+fn bool checkCollisionPointCircle(
+  Vector2 point,
+  Vector2 center,
+  float radius)
+@extern("CheckCollisionPointCircle");
+
+fn bool checkCollisionPointTriangle(
+  Vector2 point,
+  Vector2 p1,
+  Vector2 p2,
+  Vector2 p3)
+@extern("CheckCollisionPointTriangle");
+
+fn bool checkCollisionPointLine(
+  Vector2 point,
+  Vector2 p1,
+  Vector2 p2,
+  CInt threshold)
+@extern("CheckCollisionPointLine");
+
+fn bool checkCollisionPointPoly(
+  Vector2 point,
+  Vector2* points,
+  CInt pointCount)
+@extern("CheckCollisionPointPoly");
+
+fn bool checkCollisionLines(
+  Vector2 startPos1,
+  Vector2 endPos1,
+  Vector2 startPos2,
+  Vector2 endPos2,
+  Vector2* collisionPoint)
+@extern("CheckCollisionLines");
+
+fn Rectangle getCollisionRec(
+  Rectangle rec1,
+  Rectangle rec2)
+@extern("GetCollisionRec");
+
+fn Image loadImage(
+  CChar* fileName)
+@extern("LoadImage");
+
+fn Image loadImageRaw(
+  CChar* fileName,
+  CInt width,
+  CInt height,
+  CInt format,
+  CInt headerSize)
+@extern("LoadImageRaw");
+
+fn Image loadImageAnim(
+  CChar* fileName,
+  CInt* frames)
+@extern("LoadImageAnim");
+
+fn Image loadImageAnimFromMemory(
+  CChar* fileType,
+  char* fileData,
+  CInt dataSize,
+  CInt* frames)
+@extern("LoadImageAnimFromMemory");
+
+fn Image loadImageFromMemory(
+  CChar* fileType,
+  char* fileData,
+  CInt dataSize)
+@extern("LoadImageFromMemory");
+
+fn Image loadImageFromTexture(
+  Texture2D texture)
+@extern("LoadImageFromTexture");
+
+fn Image loadImageFromScreen()
+@extern("LoadImageFromScreen");
+
+fn bool isImageValid(
+  Image image)
+@extern("IsImageValid");
+
+fn void unloadImage(
+  Image image)
+@extern("UnloadImage");
+
+fn bool exportImage(
+  Image image,
+  CChar* fileName)
+@extern("ExportImage");
+
+fn char* exportImageToMemory(
+  Image image,
+  CChar* fileType,
+  CInt* fileSize)
+@extern("ExportImageToMemory");
+
+fn bool exportImageAsCode(
+  Image image,
+  CChar* fileName)
+@extern("ExportImageAsCode");
+
+fn Image genImageColor(
+  CInt width,
+  CInt height,
+  Color color)
+@extern("GenImageColor");
+
+fn Image genImageGradientLinear(
+  CInt width,
+  CInt height,
+  CInt direction,
+  Color start,
+  Color end)
+@extern("GenImageGradientLinear");
+
+fn Image genImageGradientRadial(
+  CInt width,
+  CInt height,
+  float density,
+  Color inner,
+  Color outer)
+@extern("GenImageGradientRadial");
+
+fn Image genImageGradientSquare(
+  CInt width,
+  CInt height,
+  float density,
+  Color inner,
+  Color outer)
+@extern("GenImageGradientSquare");
+
+fn Image genImageChecked(
+  CInt width,
+  CInt height,
+  CInt checksX,
+  CInt checksY,
+  Color col1,
+  Color col2)
+@extern("GenImageChecked");
+
+fn Image genImageWhiteNoise(
+  CInt width,
+  CInt height,
+  float factor)
+@extern("GenImageWhiteNoise");
+
+fn Image genImagePerlinNoise(
+  CInt width,
+  CInt height,
+  CInt offsetX,
+  CInt offsetY,
+  float scale)
+@extern("GenImagePerlinNoise");
+
+fn Image genImageCellular(
+  CInt width,
+  CInt height,
+  CInt tileSize)
+@extern("GenImageCellular");
+
+fn Image genImageText(
+  CInt width,
+  CInt height,
+  CChar* text)
+@extern("GenImageText");
+
+fn Image imageCopy(
+  Image image)
+@extern("ImageCopy");
+
+fn Image imageFromImage(
+  Image image,
+  Rectangle rec)
+@extern("ImageFromImage");
+
+fn Image imageFromChannel(
+  Image image,
+  CInt selectedChannel)
+@extern("ImageFromChannel");
+
+fn Image imageText(
+  CChar* text,
+  CInt fontSize,
+  Color color)
+@extern("ImageText");
+
+fn Image imageTextEx(
+  Font font,
+  CChar* text,
+  float fontSize,
+  float spacing,
+  Color tint)
+@extern("ImageTextEx");
+
+fn void imageFormat(
+  Image* image,
+  CInt newFormat)
+@extern("ImageFormat");
+
+fn void imageToPOT(
+  Image* image,
+  Color fill)
+@extern("ImageToPOT");
+
+fn void imageCrop(
+  Image* image,
+  Rectangle crop)
+@extern("ImageCrop");
+
+fn void imageAlphaCrop(
+  Image* image,
+  float threshold)
+@extern("ImageAlphaCrop");
+
+fn void imageAlphaClear(
+  Image* image,
+  Color color,
+  float threshold)
+@extern("ImageAlphaClear");
+
+fn void imageAlphaMask(
+  Image* image,
+  Image alphaMask)
+@extern("ImageAlphaMask");
+
+fn void imageAlphaPremultiply(
+  Image* image)
+@extern("ImageAlphaPremultiply");
+
+fn void imageBlurGaussian(
+  Image* image,
+  CInt blurSize)
+@extern("ImageBlurGaussian");
+
+fn void imageKernelConvolution(
+  Image* image,
+  float* kernel,
+  CInt kernelSize)
+@extern("ImageKernelConvolution");
+
+fn void imageResize(
+  Image* image,
+  CInt newWidth,
+  CInt newHeight)
+@extern("ImageResize");
+
+fn void imageResizeNN(
+  Image* image,
+  CInt newWidth,
+  CInt newHeight)
+@extern("ImageResizeNN");
+
+fn void imageResizeCanvas(
+  Image* image,
+  CInt newWidth,
+  CInt newHeight,
+  CInt offsetX,
+  CInt offsetY,
+  Color fill)
+@extern("ImageResizeCanvas");
+
+fn void imageMipmaps(
+  Image* image)
+@extern("ImageMipmaps");
+
+fn void imageDither(
+  Image* image,
+  CInt rBpp,
+  CInt gBpp,
+  CInt bBpp,
+  CInt aBpp)
+@extern("ImageDither");
+
+fn void imageFlipVertical(
+  Image* image)
+@extern("ImageFlipVertical");
+
+fn void imageFlipHorizontal(
+  Image* image)
+@extern("ImageFlipHorizontal");
+
+fn void imageRotate(
+  Image* image,
+  CInt degrees)
+@extern("ImageRotate");
+
+fn void imageRotateCW(
+  Image* image)
+@extern("ImageRotateCW");
+
+fn void imageRotateCCW(
+  Image* image)
+@extern("ImageRotateCCW");
+
+fn void imageColorTint(
+  Image* image,
+  Color color)
+@extern("ImageColorTint");
+
+fn void imageColorInvert(
+  Image* image)
+@extern("ImageColorInvert");
+
+fn void imageColorGrayscale(
+  Image* image)
+@extern("ImageColorGrayscale");
+
+fn void imageColorContrast(
+  Image* image,
+  float contrast)
+@extern("ImageColorContrast");
+
+fn void imageColorBrightness(
+  Image* image,
+  CInt brightness)
+@extern("ImageColorBrightness");
+
+fn void imageColorReplace(
+  Image* image,
+  Color color,
+  Color replace)
+@extern("ImageColorReplace");
+
+fn Color* loadImageColors(
+  Image image)
+@extern("LoadImageColors");
+
+fn Color* loadImagePalette(
+  Image image,
+  CInt maxPaletteSize,
+  CInt* colorCount)
+@extern("LoadImagePalette");
+
+fn void unloadImageColors(
+  Color* colors)
+@extern("UnloadImageColors");
+
+fn void unloadImagePalette(
+  Color* colors)
+@extern("UnloadImagePalette");
+
+fn Rectangle getImageAlphaBorder(
+  Image image,
+  float threshold)
+@extern("GetImageAlphaBorder");
+
+fn Color getImageColor(
+  Image image,
+  CInt x,
+  CInt y)
+@extern("GetImageColor");
+
+fn void imageClearBackground(
+  Image* dst,
+  Color color)
+@extern("ImageClearBackground");
+
+fn void imageDrawPixel(
+  Image* dst,
+  CInt posX,
+  CInt posY,
+  Color color)
+@extern("ImageDrawPixel");
+
+fn void imageDrawPixelV(
+  Image* dst,
+  Vector2 position,
+  Color color)
+@extern("ImageDrawPixelV");
+
+fn void imageDrawLine(
+  Image* dst,
+  CInt startPosX,
+  CInt startPosY,
+  CInt endPosX,
+  CInt endPosY,
+  Color color)
+@extern("ImageDrawLine");
+
+fn void imageDrawLineV(
+  Image* dst,
+  Vector2 start,
+  Vector2 end,
+  Color color)
+@extern("ImageDrawLineV");
+
+fn void imageDrawLineEx(
+  Image* dst,
+  Vector2 start,
+  Vector2 end,
+  CInt thick,
+  Color color)
+@extern("ImageDrawLineEx");
+
+fn void imageDrawCircle(
+  Image* dst,
+  CInt centerX,
+  CInt centerY,
+  CInt radius,
+  Color color)
+@extern("ImageDrawCircle");
+
+fn void imageDrawCircleV(
+  Image* dst,
+  Vector2 center,
+  CInt radius,
+  Color color)
+@extern("ImageDrawCircleV");
+
+fn void imageDrawCircleLines(
+  Image* dst,
+  CInt centerX,
+  CInt centerY,
+  CInt radius,
+  Color color)
+@extern("ImageDrawCircleLines");
+
+fn void imageDrawCircleLinesV(
+  Image* dst,
+  Vector2 center,
+  CInt radius,
+  Color color)
+@extern("ImageDrawCircleLinesV");
+
+fn void imageDrawRectangle(
+  Image* dst,
+  CInt posX,
+  CInt posY,
+  CInt width,
+  CInt height,
+  Color color)
+@extern("ImageDrawRectangle");
+
+fn void imageDrawRectangleV(
+  Image* dst,
+  Vector2 position,
+  Vector2 size,
+  Color color)
+@extern("ImageDrawRectangleV");
+
+fn void imageDrawRectangleRec(
+  Image* dst,
+  Rectangle rec,
+  Color color)
+@extern("ImageDrawRectangleRec");
+
+fn void imageDrawRectangleLines(
+  Image* dst,
+  Rectangle rec,
+  CInt thick,
+  Color color)
+@extern("ImageDrawRectangleLines");
+
+fn void imageDrawTriangle(
+  Image* dst,
+  Vector2 v1,
+  Vector2 v2,
+  Vector2 v3,
+  Color color)
+@extern("ImageDrawTriangle");
+
+fn void imageDrawTriangleEx(
+  Image* dst,
+  Vector2 v1,
+  Vector2 v2,
+  Vector2 v3,
+  Color c1,
+  Color c2,
+  Color c3)
+@extern("ImageDrawTriangleEx");
+
+fn void imageDrawTriangleLines(
+  Image* dst,
+  Vector2 v1,
+  Vector2 v2,
+  Vector2 v3,
+  Color color)
+@extern("ImageDrawTriangleLines");
+
+fn void imageDrawTriangleFan(
+  Image* dst,
+  Vector2* points,
+  CInt pointCount,
+  Color color)
+@extern("ImageDrawTriangleFan");
+
+fn void imageDrawTriangleStrip(
+  Image* dst,
+  Vector2* points,
+  CInt pointCount,
+  Color color)
+@extern("ImageDrawTriangleStrip");
+
+fn void imageDraw(
+  Image* dst,
+  Image src,
+  Rectangle srcRec,
+  Rectangle dstRec,
+  Color tint)
+@extern("ImageDraw");
+
+fn void imageDrawText(
+  Image* dst,
+  CChar* text,
+  CInt posX,
+  CInt posY,
+  CInt fontSize,
+  Color color)
+@extern("ImageDrawText");
+
+fn void imageDrawTextEx(
+  Image* dst,
+  Font font,
+  CChar* text,
+  Vector2 position,
+  float fontSize,
+  float spacing,
+  Color tint)
+@extern("ImageDrawTextEx");
+
+fn Texture2D loadTexture(
+  CChar* fileName)
+@extern("LoadTexture");
+
+fn Texture2D loadTextureFromImage(
+  Image image)
+@extern("LoadTextureFromImage");
+
+fn TextureCubemap loadTextureCubemap(
+  Image image,
+  CInt layout)
+@extern("LoadTextureCubemap");
+
+fn RenderTexture2D loadRenderTexture(
+  CInt width,
+  CInt height)
+@extern("LoadRenderTexture");
+
+fn bool isTextureValid(
+  Texture2D texture)
+@extern("IsTextureValid");
+
+fn void unloadTexture(
+  Texture2D texture)
+@extern("UnloadTexture");
+
+fn bool isRenderTextureValid(
+  RenderTexture2D target)
+@extern("IsRenderTextureValid");
+
+fn void unloadRenderTexture(
+  RenderTexture2D target)
+@extern("UnloadRenderTexture");
+
+fn void updateTexture(
+  Texture2D texture,
+  void* pixels)
+@extern("UpdateTexture");
+
+fn void updateTextureRec(
+  Texture2D texture,
+  Rectangle rec,
+  void* pixels)
+@extern("UpdateTextureRec");
+
+fn void genTextureMipmaps(
+  Texture2D* texture)
+@extern("GenTextureMipmaps");
+
+fn void setTextureFilter(
+  Texture2D texture,
+  CInt filter)
+@extern("SetTextureFilter");
+
+fn void setTextureWrap(
+  Texture2D texture,
+  CInt wrap)
+@extern("SetTextureWrap");
+
+fn void drawTexture(
+  Texture2D texture,
+  CInt posX,
+  CInt posY,
+  Color tint)
+@extern("DrawTexture");
+
+fn void drawTextureV(
+  Texture2D texture,
+  Vector2 position,
+  Color tint)
+@extern("DrawTextureV");
+
+fn void drawTextureEx(
+  Texture2D texture,
+  Vector2 position,
+  float rotation,
+  float scale,
+  Color tint)
+@extern("DrawTextureEx");
+
+fn void drawTextureRec(
+  Texture2D texture,
+  Rectangle source,
+  Vector2 position,
+  Color tint)
+@extern("DrawTextureRec");
+
+fn void drawTexturePro(
+  Texture2D texture,
+  Rectangle source,
+  Rectangle dest,
+  Vector2 origin,
+  float rotation,
+  Color tint)
+@extern("DrawTexturePro");
+
+fn void drawTextureNPatch(
+  Texture2D texture,
+  NPatchInfo nPatchInfo,
+  Rectangle dest,
+  Vector2 origin,
+  float rotation,
+  Color tint)
+@extern("DrawTextureNPatch");
+
+fn bool colorIsEqual(
+  Color col1,
+  Color col2)
+@extern("ColorIsEqual");
+
+fn Color fade(
+  Color color,
+  float alpha)
+@extern("Fade");
+
+fn CInt colorToInt(
+  Color color)
+@extern("ColorToInt");
+
+fn Vector4 colorNormalize(
+  Color color)
+@extern("ColorNormalize");
+
+fn Color colorFromNormalized(
+  Vector4 normalized)
+@extern("ColorFromNormalized");
+
+fn Vector3 colorToHSV(
+  Color color)
+@extern("ColorToHSV");
+
+fn Color colorFromHSV(
+  float hue,
+  float saturation,
+  float value)
+@extern("ColorFromHSV");
+
+fn Color colorTint(
+  Color color,
+  Color tint)
+@extern("ColorTint");
+
+fn Color colorBrightness(
+  Color color,
+  float factor)
+@extern("ColorBrightness");
+
+fn Color colorContrast(
+  Color color,
+  float contrast)
+@extern("ColorContrast");
+
+fn Color colorAlpha(
+  Color color,
+  float alpha)
+@extern("ColorAlpha");
+
+fn Color colorAlphaBlend(
+  Color dst,
+  Color src,
+  Color tint)
+@extern("ColorAlphaBlend");
+
+fn Color colorLerp(
+  Color color1,
+  Color color2,
+  float factor)
+@extern("ColorLerp");
+
+fn Color getColor(
+  CUInt hexValue)
+@extern("GetColor");
+
+fn Color getPixelColor(
+  void* srcPtr,
+  CInt format)
+@extern("GetPixelColor");
+
+fn void setPixelColor(
+  void* dstPtr,
+  Color color,
+  CInt format)
+@extern("SetPixelColor");
+
+fn CInt getPixelDataSize(
+  CInt width,
+  CInt height,
+  CInt format)
+@extern("GetPixelDataSize");
+
+fn Font getFontDefault()
+@extern("GetFontDefault");
+
+fn Font loadFont(
+  CChar* fileName)
+@extern("LoadFont");
+
+fn Font loadFontEx(
+  CChar* fileName,
+  CInt fontSize,
+  CInt* codepoints,
+  CInt codepointCount)
+@extern("LoadFontEx");
+
+fn Font loadFontFromImage(
+  Image image,
+  Color key,
+  CInt firstChar)
+@extern("LoadFontFromImage");
+
+fn Font loadFontFromMemory(
+  CChar* fileType,
+  char* fileData,
+  CInt dataSize,
+  CInt fontSize,
+  CInt* codepoints,
+  CInt codepointCount)
+@extern("LoadFontFromMemory");
+
+fn bool isFontValid(
+  Font font)
+@extern("IsFontValid");
+
+fn GlyphInfo* loadFontData(
+  char* fileData,
+  CInt dataSize,
+  CInt fontSize,
+  CInt* codepoints,
+  CInt codepointCount,
+  CInt type)
+@extern("LoadFontData");
+
+fn Image genImageFontAtlas(
+  GlyphInfo* glyphs,
+  Rectangle** glyphRecs,
+  CInt glyphCount,
+  CInt fontSize,
+  CInt padding,
+  CInt packMethod)
+@extern("GenImageFontAtlas");
+
+fn void unloadFontData(
+  GlyphInfo* glyphs,
+  CInt glyphCount)
+@extern("UnloadFontData");
+
+fn void unloadFont(
+  Font font)
+@extern("UnloadFont");
+
+fn bool exportFontAsCode(
+  Font font,
+  CChar* fileName)
+@extern("ExportFontAsCode");
+
+fn void drawFPS(
+  CInt posX,
+  CInt posY)
+@extern("DrawFPS");
+
+fn void drawText(
+  CChar* text,
+  CInt posX,
+  CInt posY,
+  CInt fontSize,
+  Color color)
+@extern("DrawText");
+
+fn void drawTextEx(
+  Font font,
+  CChar* text,
+  Vector2 position,
+  float fontSize,
+  float spacing,
+  Color tint)
+@extern("DrawTextEx");
+
+fn void drawTextPro(
+  Font font,
+  CChar* text,
+  Vector2 position,
+  Vector2 origin,
+  float rotation,
+  float fontSize,
+  float spacing,
+  Color tint)
+@extern("DrawTextPro");
+
+fn void drawTextCodepoint(
+  Font font,
+  CInt codepoint,
+  Vector2 position,
+  float fontSize,
+  Color tint)
+@extern("DrawTextCodepoint");
+
+fn void drawTextCodepoints(
+  Font font,
+  CInt* codepoints,
+  CInt codepointCount,
+  Vector2 position,
+  float fontSize,
+  float spacing,
+  Color tint)
+@extern("DrawTextCodepoints");
+
+fn void setTextLineSpacing(
+  CInt spacing)
+@extern("SetTextLineSpacing");
+
+fn CInt measureText(
+  CChar* text,
+  CInt fontSize)
+@extern("MeasureText");
+
+fn Vector2 measureTextEx(
+  Font font,
+  CChar* text,
+  float fontSize,
+  float spacing)
+@extern("MeasureTextEx");
+
+fn CInt getGlyphIndex(
+  Font font,
+  CInt codepoint)
+@extern("GetGlyphIndex");
+
+fn GlyphInfo getGlyphInfo(
+  Font font,
+  CInt codepoint)
+@extern("GetGlyphInfo");
+
+fn Rectangle getGlyphAtlasRec(
+  Font font,
+  CInt codepoint)
+@extern("GetGlyphAtlasRec");
+
+fn CChar* loadUTF8(
+  CInt* codepoints,
+  CInt length)
+@extern("LoadUTF8");
+
+fn void unloadUTF8(
+  CChar* text)
+@extern("UnloadUTF8");
+
+fn CInt* loadCodepoints(
+  CChar* text,
+  CInt* count)
+@extern("LoadCodepoints");
+
+fn void unloadCodepoints(
+  CInt* codepoints)
+@extern("UnloadCodepoints");
+
+fn CInt getCodepointCount(
+  CChar* text)
+@extern("GetCodepointCount");
+
+fn CInt getCodepoint(
+  CChar* text,
+  CInt* codepointSize)
+@extern("GetCodepoint");
+
+fn CInt getCodepointNext(
+  CChar* text,
+  CInt* codepointSize)
+@extern("GetCodepointNext");
+
+fn CInt getCodepointPrevious(
+  CChar* text,
+  CInt* codepointSize)
+@extern("GetCodepointPrevious");
+
+fn CChar* codepointToUTF8(
+  CInt codepoint,
+  CInt* utf8Size)
+@extern("CodepointToUTF8");
+
+fn CInt textCopy(
+  CChar* dst,
+  CChar* src)
+@extern("TextCopy");
+
+fn bool textIsEqual(
+  CChar* text1,
+  CChar* text2)
+@extern("TextIsEqual");
+
+fn CUInt textLength(
+  CChar* text)
+@extern("TextLength");
+
+fn CChar* textFormat(
+  CChar* text,
+  ...)
+@extern("TextFormat");
+
+fn CChar* textSubtext(
+  CChar* text,
+  CInt position,
+  CInt length)
+@extern("TextSubtext");
+
+fn CChar* textReplace(
+  CChar* text,
+  CChar* replace,
+  CChar* by)
+@extern("TextReplace");
+
+fn CChar* textInsert(
+  CChar* text,
+  CChar* insert,
+  CInt position)
+@extern("TextInsert");
+
+fn CChar* textJoin(
+  CChar** textList,
+  CInt count,
+  CChar* delimiter)
+@extern("TextJoin");
+
+fn CChar** textSplit(
+  CChar* text,
+  CChar delimiter,
+  CInt* count)
+@extern("TextSplit");
+
+fn void textAppend(
+  CChar* text,
+  CChar* append,
+  CInt* position)
+@extern("TextAppend");
+
+fn CInt textFindIndex(
+  CChar* text,
+  CChar* find)
+@extern("TextFindIndex");
+
+fn CChar* textToUpper(
+  CChar* text)
+@extern("TextToUpper");
+
+fn CChar* textToLower(
+  CChar* text)
+@extern("TextToLower");
+
+fn CChar* textToPascal(
+  CChar* text)
+@extern("TextToPascal");
+
+fn CChar* textToSnake(
+  CChar* text)
+@extern("TextToSnake");
+
+fn CChar* textToCamel(
+  CChar* text)
+@extern("TextToCamel");
+
+fn CInt textToInteger(
+  CChar* text)
+@extern("TextToInteger");
+
+fn float textToFloat(
+  CChar* text)
+@extern("TextToFloat");
+
+fn void drawLine3D(
+  Vector3 startPos,
+  Vector3 endPos,
+  Color color)
+@extern("DrawLine3D");
+
+fn void drawPoint3D(
+  Vector3 position,
+  Color color)
+@extern("DrawPoint3D");
+
+fn void drawCircle3D(
+  Vector3 center,
+  float radius,
+  Vector3 rotationAxis,
+  float rotationAngle,
+  Color color)
+@extern("DrawCircle3D");
+
+fn void drawTriangle3D(
+  Vector3 v1,
+  Vector3 v2,
+  Vector3 v3,
+  Color color)
+@extern("DrawTriangle3D");
+
+fn void drawTriangleStrip3D(
+  Vector3* points,
+  CInt pointCount,
+  Color color)
+@extern("DrawTriangleStrip3D");
+
+fn void drawCube(
+  Vector3 position,
+  float width,
+  float height,
+  float length,
+  Color color)
+@extern("DrawCube");
+
+fn void drawCubeV(
+  Vector3 position,
+  Vector3 size,
+  Color color)
+@extern("DrawCubeV");
+
+fn void drawCubeWires(
+  Vector3 position,
+  float width,
+  float height,
+  float length,
+  Color color)
+@extern("DrawCubeWires");
+
+fn void drawCubeWiresV(
+  Vector3 position,
+  Vector3 size,
+  Color color)
+@extern("DrawCubeWiresV");
+
+fn void drawSphere(
+  Vector3 centerPos,
+  float radius,
+  Color color)
+@extern("DrawSphere");
+
+fn void drawSphereEx(
+  Vector3 centerPos,
+  float radius,
+  CInt rings,
+  CInt slices,
+  Color color)
+@extern("DrawSphereEx");
+
+fn void drawSphereWires(
+  Vector3 centerPos,
+  float radius,
+  CInt rings,
+  CInt slices,
+  Color color)
+@extern("DrawSphereWires");
+
+fn void drawCylinder(
+  Vector3 position,
+  float radiusTop,
+  float radiusBottom,
+  float height,
+  CInt slices,
+  Color color)
+@extern("DrawCylinder");
+
+fn void drawCylinderEx(
+  Vector3 startPos,
+  Vector3 endPos,
+  float startRadius,
+  float endRadius,
+  CInt sides,
+  Color color)
+@extern("DrawCylinderEx");
+
+fn void drawCylinderWires(
+  Vector3 position,
+  float radiusTop,
+  float radiusBottom,
+  float height,
+  CInt slices,
+  Color color)
+@extern("DrawCylinderWires");
+
+fn void drawCylinderWiresEx(
+  Vector3 startPos,
+  Vector3 endPos,
+  float startRadius,
+  float endRadius,
+  CInt sides,
+  Color color)
+@extern("DrawCylinderWiresEx");
+
+fn void drawCapsule(
+  Vector3 startPos,
+  Vector3 endPos,
+  float radius,
+  CInt slices,
+  CInt rings,
+  Color color)
+@extern("DrawCapsule");
+
+fn void drawCapsuleWires(
+  Vector3 startPos,
+  Vector3 endPos,
+  float radius,
+  CInt slices,
+  CInt rings,
+  Color color)
+@extern("DrawCapsuleWires");
+
+fn void drawPlane(
+  Vector3 centerPos,
+  Vector2 size,
+  Color color)
+@extern("DrawPlane");
+
+fn void drawRay(
+  Ray ray,
+  Color color)
+@extern("DrawRay");
+
+fn void drawGrid(
+  CInt slices,
+  float spacing)
+@extern("DrawGrid");
+
+fn Model loadModel(
+  CChar* fileName)
+@extern("LoadModel");
+
+fn Model loadModelFromMesh(
+  Mesh mesh)
+@extern("LoadModelFromMesh");
+
+fn bool isModelValid(
+  Model model)
+@extern("IsModelValid");
+
+fn void unloadModel(
+  Model model)
+@extern("UnloadModel");
+
+fn BoundingBox getModelBoundingBox(
+  Model model)
+@extern("GetModelBoundingBox");
+
+fn void drawModel(
+  Model model,
+  Vector3 position,
+  float scale,
+  Color tint)
+@extern("DrawModel");
+
+fn void drawModelEx(
+  Model model,
+  Vector3 position,
+  Vector3 rotationAxis,
+  float rotationAngle,
+  Vector3 scale,
+  Color tint)
+@extern("DrawModelEx");
+
+fn void drawModelWires(
+  Model model,
+  Vector3 position,
+  float scale,
+  Color tint)
+@extern("DrawModelWires");
+
+fn void drawModelWiresEx(
+  Model model,
+  Vector3 position,
+  Vector3 rotationAxis,
+  float rotationAngle,
+  Vector3 scale,
+  Color tint)
+@extern("DrawModelWiresEx");
+
+fn void drawModelPoints(
+  Model model,
+  Vector3 position,
+  float scale,
+  Color tint)
+@extern("DrawModelPoints");
+
+fn void drawModelPointsEx(
+  Model model,
+  Vector3 position,
+  Vector3 rotationAxis,
+  float rotationAngle,
+  Vector3 scale,
+  Color tint)
+@extern("DrawModelPointsEx");
+
+fn void drawBoundingBox(
+  BoundingBox box,
+  Color color)
+@extern("DrawBoundingBox");
+
+fn void drawBillboard(
+  Camera camera,
+  Texture2D texture,
+  Vector3 position,
+  float scale,
+  Color tint)
+@extern("DrawBillboard");
+
+fn void drawBillboardRec(
+  Camera camera,
+  Texture2D texture,
+  Rectangle source,
+  Vector3 position,
+  Vector2 size,
+  Color tint)
+@extern("DrawBillboardRec");
+
+fn void drawBillboardPro(
+  Camera camera,
+  Texture2D texture,
+  Rectangle source,
+  Vector3 position,
+  Vector3 up,
+  Vector2 size,
+  Vector2 origin,
+  float rotation,
+  Color tint)
+@extern("DrawBillboardPro");
+
+fn void uploadMesh(
+  Mesh* mesh,
+  bool dynamic)
+@extern("UploadMesh");
+
+fn void updateMeshBuffer(
+  Mesh mesh,
+  CInt index,
+  void* data,
+  CInt dataSize,
+  CInt offset)
+@extern("UpdateMeshBuffer");
+
+fn void unloadMesh(
+  Mesh mesh)
+@extern("UnloadMesh");
+
+fn void drawMesh(
+  Mesh mesh,
+  Material material,
+  Matrix transform)
+@extern("DrawMesh");
+
+fn void drawMeshInstanced(
+  Mesh mesh,
+  Material material,
+  Matrix* transforms,
+  CInt instances)
+@extern("DrawMeshInstanced");
+
+fn BoundingBox getMeshBoundingBox(
+  Mesh mesh)
+@extern("GetMeshBoundingBox");
+
+fn void genMeshTangents(
+  Mesh* mesh)
+@extern("GenMeshTangents");
+
+fn bool exportMesh(
+  Mesh mesh,
+  CChar* fileName)
+@extern("ExportMesh");
+
+fn bool exportMeshAsCode(
+  Mesh mesh,
+  CChar* fileName)
+@extern("ExportMeshAsCode");
+
+fn Mesh genMeshPoly(
+  CInt sides,
+  float radius)
+@extern("GenMeshPoly");
+
+fn Mesh genMeshPlane(
+  float width,
+  float length,
+  CInt resX,
+  CInt resZ)
+@extern("GenMeshPlane");
+
+fn Mesh genMeshCube(
+  float width,
+  float height,
+  float length)
+@extern("GenMeshCube");
+
+fn Mesh genMeshSphere(
+  float radius,
+  CInt rings,
+  CInt slices)
+@extern("GenMeshSphere");
+
+fn Mesh genMeshHemiSphere(
+  float radius,
+  CInt rings,
+  CInt slices)
+@extern("GenMeshHemiSphere");
+
+fn Mesh genMeshCylinder(
+  float radius,
+  float height,
+  CInt slices)
+@extern("GenMeshCylinder");
+
+fn Mesh genMeshCone(
+  float radius,
+  float height,
+  CInt slices)
+@extern("GenMeshCone");
+
+fn Mesh genMeshTorus(
+  float radius,
+  float size,
+  CInt radSeg,
+  CInt sides)
+@extern("GenMeshTorus");
+
+fn Mesh genMeshKnot(
+  float radius,
+  float size,
+  CInt radSeg,
+  CInt sides)
+@extern("GenMeshKnot");
+
+fn Mesh genMeshHeightmap(
+  Image heightmap,
+  Vector3 size)
+@extern("GenMeshHeightmap");
+
+fn Mesh genMeshCubicmap(
+  Image cubicmap,
+  Vector3 cubeSize)
+@extern("GenMeshCubicmap");
+
+fn Material* loadMaterials(
+  CChar* fileName,
+  CInt* materialCount)
+@extern("LoadMaterials");
+
+fn Material loadMaterialDefault()
+@extern("LoadMaterialDefault");
+
+fn bool isMaterialValid(
+  Material material)
+@extern("IsMaterialValid");
+
+fn void unloadMaterial(
+  Material material)
+@extern("UnloadMaterial");
+
+fn void setMaterialTexture(
+  Material* material,
+  CInt mapType,
+  Texture2D texture)
+@extern("SetMaterialTexture");
+
+fn void setModelMeshMaterial(
+  Model* model,
+  CInt meshId,
+  CInt materialId)
+@extern("SetModelMeshMaterial");
+
+fn ModelAnimation* loadModelAnimations(
+  CChar* fileName,
+  CInt* animCount)
+@extern("LoadModelAnimations");
+
+fn void updateModelAnimation(
+  Model model,
+  ModelAnimation anim,
+  CInt frame)
+@extern("UpdateModelAnimation");
+
+fn void updateModelAnimationBones(
+  Model model,
+  ModelAnimation anim,
+  CInt frame)
+@extern("UpdateModelAnimationBones");
+
+fn void unloadModelAnimation(
+  ModelAnimation anim)
+@extern("UnloadModelAnimation");
+
+fn void unloadModelAnimations(
+  ModelAnimation* animations,
+  CInt animCount)
+@extern("UnloadModelAnimations");
+
+fn bool isModelAnimationValid(
+  Model model,
+  ModelAnimation anim)
+@extern("IsModelAnimationValid");
+
+fn bool checkCollisionSpheres(
+  Vector3 center1,
+  float radius1,
+  Vector3 center2,
+  float radius2)
+@extern("CheckCollisionSpheres");
+
+fn bool checkCollisionBoxes(
+  BoundingBox box1,
+  BoundingBox box2)
+@extern("CheckCollisionBoxes");
+
+fn bool checkCollisionBoxSphere(
+  BoundingBox box,
+  Vector3 center,
+  float radius)
+@extern("CheckCollisionBoxSphere");
+
+fn RayCollision getRayCollisionSphere(
+  Ray ray,
+  Vector3 center,
+  float radius)
+@extern("GetRayCollisionSphere");
+
+fn RayCollision getRayCollisionBox(
+  Ray ray,
+  BoundingBox box)
+@extern("GetRayCollisionBox");
+
+fn RayCollision getRayCollisionMesh(
+  Ray ray,
+  Mesh mesh,
+  Matrix transform)
+@extern("GetRayCollisionMesh");
+
+fn RayCollision getRayCollisionTriangle(
+  Ray ray,
+  Vector3 p1,
+  Vector3 p2,
+  Vector3 p3)
+@extern("GetRayCollisionTriangle");
+
+fn RayCollision getRayCollisionQuad(
+  Ray ray,
+  Vector3 p1,
+  Vector3 p2,
+  Vector3 p3,
+  Vector3 p4)
+@extern("GetRayCollisionQuad");
+
+alias AudioCallback = fn void(
+  void* bufferData,
+  CUInt frames);
+
+fn void initAudioDevice()
+@extern("InitAudioDevice");
+
+fn void closeAudioDevice()
+@extern("CloseAudioDevice");
+
+fn bool isAudioDeviceReady()
+@extern("IsAudioDeviceReady");
+
+fn void setMasterVolume(
+  float volume)
+@extern("SetMasterVolume");
+
+fn float getMasterVolume()
+@extern("GetMasterVolume");
+
+fn Wave loadWave(
+  CChar* fileName)
+@extern("LoadWave");
+
+fn Wave loadWaveFromMemory(
+  CChar* fileType,
+  char* fileData,
+  CInt dataSize)
+@extern("LoadWaveFromMemory");
+
+fn bool isWaveValid(
+  Wave wave)
+@extern("IsWaveValid");
+
+fn Sound loadSound(
+  CChar* fileName)
+@extern("LoadSound");
+
+fn Sound loadSoundFromWave(
+  Wave wave)
+@extern("LoadSoundFromWave");
+
+fn Sound loadSoundAlias(
+  Sound source)
+@extern("LoadSoundAlias");
+
+fn bool isSoundValid(
+  Sound sound)
+@extern("IsSoundValid");
+
+fn void updateSound(
+  Sound sound,
+  void* data,
+  CInt sampleCount)
+@extern("UpdateSound");
+
+fn void unloadWave(
+  Wave wave)
+@extern("UnloadWave");
+
+fn void unloadSound(
+  Sound sound)
+@extern("UnloadSound");
+
+fn void unloadSoundAlias(
+  Sound)
+@extern("UnloadSoundAlias");
+
+fn bool exportWave(
+  Wave wave,
+  CChar* fileName)
+@extern("ExportWave");
+
+fn bool exportWaveAsCode(
+  Wave wave,
+  CChar* fileName)
+@extern("ExportWaveAsCode");
+
+fn void playSound(
+  Sound sound)
+@extern("PlaySound");
+
+fn void stopSound(
+  Sound sound)
+@extern("StopSound");
+
+fn void pauseSound(
+  Sound sound)
+@extern("PauseSound");
+
+fn void resumeSound(
+  Sound sound)
+@extern("ResumeSound");
+
+fn bool isSoundPlaying(
+  Sound sound)
+@extern("IsSoundPlaying");
+
+fn void setSoundVolume(
+  Sound sound,
+  float volume)
+@extern("SetSoundVolume");
+
+fn void setSoundPitch(
+  Sound sound,
+  float pitch)
+@extern("SetSoundPitch");
+
+fn void setSoundPan(
+  Sound sound,
+  float pan)
+@extern("SetSoundPan");
+
+fn Wave waveCopy(
+  Wave wave)
+@extern("WaveCopy");
+
+fn void waveCrop(
+  Wave* wave,
+  CInt initFrame,
+  CInt finalFrame)
+@extern("WaveCrop");
+
+fn void waveFormat(
+  Wave* wave,
+  CInt sampleRate,
+  CInt sampleSize,
+  CInt channels)
+@extern("WaveFormat");
+
+fn float* loadWaveSamples(
+  Wave wave)
+@extern("LoadWaveSamples");
+
+fn void unloadWaveSamples(
+  float* samples)
+@extern("UnloadWaveSamples");
+
+fn Music loadMusicStream(
+  CChar* fileName)
+@extern("LoadMusicStream");
+
+fn Music loadMusicStreamFromMemory(
+  CChar* fileType,
+  char* data,
+  CInt dataSize)
+@extern("LoadMusicStreamFromMemory");
+
+fn bool isMusicValid(
+  Music music)
+@extern("IsMusicValid");
+
+fn void unloadMusicStream(
+  Music music)
+@extern("UnloadMusicStream");
+
+fn void playMusicStream(
+  Music music)
+@extern("PlayMusicStream");
+
+fn bool isMusicStreamPlaying(
+  Music music)
+@extern("IsMusicStreamPlaying");
+
+fn void updateMusicStream(
+  Music music)
+@extern("UpdateMusicStream");
+
+fn void stopMusicStream(
+  Music music)
+@extern("StopMusicStream");
+
+fn void pauseMusicStream(
+  Music music)
+@extern("PauseMusicStream");
+
+fn void resumeMusicStream(
+  Music music)
+@extern("ResumeMusicStream");
+
+fn void seekMusicStream(
+  Music music,
+  float position)
+@extern("SeekMusicStream");
+
+fn void setMusicVolume(
+  Music music,
+  float volume)
+@extern("SetMusicVolume");
+
+fn void setMusicPitch(
+  Music music,
+  float pitch)
+@extern("SetMusicPitch");
+
+fn void setMusicPan(
+  Music music,
+  float pan)
+@extern("SetMusicPan");
+
+fn float getMusicTimeLength(
+  Music music)
+@extern("GetMusicTimeLength");
+
+fn float getMusicTimePlayed(
+  Music music)
+@extern("GetMusicTimePlayed");
+
+fn AudioStream loadAudioStream(
+  CUInt sampleRate,
+  CUInt sampleSize,
+  CUInt channels)
+@extern("LoadAudioStream");
+
+fn bool isAudioStreamValid(
+  AudioStream stream)
+@extern("IsAudioStreamValid");
+
+fn void unloadAudioStream(
+  AudioStream stream)
+@extern("UnloadAudioStream");
+
+fn void updateAudioStream(
+  AudioStream stream,
+  void* data,
+  CInt frameCount)
+@extern("UpdateAudioStream");
+
+fn bool isAudioStreamProcessed(
+  AudioStream stream)
+@extern("IsAudioStreamProcessed");
+
+fn void playAudioStream(
+  AudioStream stream)
+@extern("PlayAudioStream");
+
+fn void pauseAudioStream(
+  AudioStream stream)
+@extern("PauseAudioStream");
+
+fn void resumeAudioStream(
+  AudioStream stream)
+@extern("ResumeAudioStream");
+
+fn bool isAudioStreamPlaying(
+  AudioStream stream)
+@extern("IsAudioStreamPlaying");
+
+fn void stopAudioStream(
+  AudioStream stream)
+@extern("StopAudioStream");
+
+fn void setAudioStreamVolume(
+  AudioStream stream,
+  float volume)
+@extern("SetAudioStreamVolume");
+
+fn void setAudioStreamPitch(
+  AudioStream stream,
+  float pitch)
+@extern("SetAudioStreamPitch");
+
+fn void setAudioStreamPan(
+  AudioStream stream,
+  float pan)
+@extern("SetAudioStreamPan");
+
+fn void setAudioStreamBufferSizeDefault(
+  CInt size)
+@extern("SetAudioStreamBufferSizeDefault");
+
+fn void setAudioStreamCallback(
+  AudioStream stream,
+  AudioCallback callback)
+@extern("SetAudioStreamCallback");
+
+fn void attachAudioStreamProcessor(
+  AudioStream stream,
+  AudioCallback processor)
+@extern("AttachAudioStreamProcessor");
+
+fn void detachAudioStreamProcessor(
+  AudioStream stream,
+  AudioCallback processor)
+@extern("DetachAudioStreamProcessor");
+
+fn void attachAudioMixedProcessor(
+  AudioCallback processor)
+@extern("AttachAudioMixedProcessor");
+
+fn void detachAudioMixedProcessor(
+  AudioCallback processor)
+@extern("DetachAudioMixedProcessor");

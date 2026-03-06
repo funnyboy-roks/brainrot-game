@@ -368,6 +368,7 @@ fn void main()
     rl::setTargetFPS(60);
     rl::setMasterVolume(0.5);
     int score = 10;
+    bool paused = false;
     while (!rl::windowShouldClose()) {
         // rl::updateCamera(&camera, rl::CAMERA_THIRD_PERSON);
 
@@ -393,6 +394,9 @@ fn void main()
                 float min = -10 + player_height/2;
                 if (position.z < min) position.z = min;
             }
+            if (rl::isKeyPressed(rl::KEY_SPACE)) {
+                paused ^= true;
+            }
 
             BoundingBox player_box = {
                 .min = position - player_height/2,
@@ -415,7 +419,7 @@ fn void main()
                     target.left.draw(left_center, player_box, &score, good, bad);
                     target.right.draw(right_center, player_box, &score, good, bad);
 
-                    target.pos.x += 0.75;
+                    if (!paused) target.pos.x += 0.75;
 
                     if (target.pos.x > gap) {
                         target.pos.x = -(start + 9 * gap);

@@ -228,16 +228,34 @@ fn void draw_score_text(Vector3 position, ZString text) {
 }
 
 fn Vector3 Vector3.add(self, Vector3 other) @operator(+) => { self.x + other.x, self.y + other.y, self.z + other.z };
+fn Vector3 Vector3.addf(self, float other) @operator(+) => { self.x + other, self.y + other, self.z + other };
 fn Vector3 Vector3.sub(self, Vector3 other) @operator(-) => { self.x - other.x, self.y - other.y, self.z - other.z };
+fn Vector3 Vector3.subf(self, float other) @operator(-) => { self.x - other, self.y - other, self.z - other };
+fn Vector3 Vector3.div(self, float other) @operator(/) => { self.x / other, self.y / other, self.z / other };
+
+fn int get_random() {
+    if (rl::getRandomValue(1, 6) == 1) {
+        return 0;
+    }
+
+    if (rl::getRandomValue(0, 1) == 1) {
+        return rl::getRandomValue(-100, -1);
+    } else {
+        return rl::getRandomValue(1, 50);
+    }
+}
 
 struct Target {
     Vector3 pos;
     int left;
     int right;
+    bool collided_left;
+    bool collided_right;
 }
 
 fn void main()
 {
+    rl::setConfigFlags(rl::FLAG_VSYNC_HINT | rl::FLAG_MSAA_4X_HINT);
     rl::initWindow(800, 600, "Brainrot");
 
     rl::Camera camera;
@@ -269,14 +287,17 @@ fn void main()
     for (int i = 0; i < 10; i++) {
         targets.push({
             .pos = { -(start + (float)i * gap), 0.25, 0 },
-            .left = rl::getRandomValue(-50, 50),
-            .right = rl::getRandomValue(-50, 50),
+            .left = get_random(),
+            .right = get_random(),
+            .collided_left = false,
+            .collided_right = false,
         });
     }
 
     rl::setTargetFPS(60);
+    int score = 10;
     while (!rl::windowShouldClose()) {
-        rl::updateCamera(&camera, rl::CAMERA_THIRD_PERSON);
+        // rl::updateCamera(&camera, rl::CAMERA_THIRD_PERSON);
 
         // Update the shader with the camera view vector (points towards { 0.0f, 0.0f, 0.0f })
         float[3] camera_pos = { camera.position.x, camera.position.y, camera.position.z };
@@ -284,19 +305,30 @@ fn void main()
 
         update_light_values(shader, sun);
 
+        float player_height = 2;
         rl::beginDrawing();
             rl::clearBackground(rl::SKYBLUE);
 
             Vector3 speed = { 0, 0, 0.2 };
 
-            if (rl::isKeyDown(rl::KEY_LEFT)) position += speed;
-            if (rl::isKeyDown(rl::KEY_RIGHT)) position -= speed;
+            if (rl::isKeyDown(rl::KEY_LEFT)) {
+                position += speed;
+                float max = 10 - player_height/2;
+                if (position.z > max) position.z = max;
+            }
+            if (rl::isKeyDown(rl::KEY_RIGHT)) {
+                position -= speed;
+                float min = -10 + player_height/2;
+                if (position.z < min) position.z = min;
+            }
 
+            BoundingBox player_box = {
+                .min = position - player_height/2,
+                .max = position + player_height/2
+            };
             rl::beginMode3D(camera); rl::beginShaderMode(shader);
                 // platform
                 rl::drawCube({-125, 0, 0}, 300, 0.5, 20, rl::RAYWHITE);
-
-                float player_height = 2;
 
                 rl::drawCube(
                     position + (Vector3){ 0, player_height/2, 0 },
@@ -310,34 +342,64 @@ fn void main()
                     Vector3 left_center = target.pos + left_offset;
                     Vector3 right_center = target.pos + right_offset;
 
-                    rl::drawCube(
-                        left_center,
-                        0.25, 3, 10,
-                        target.left < 0 ? rl::RED : rl::GREEN,
-                    );
+                    if (target.left != 0) {
+                        rl::drawCube(
+                            left_center,
+                            0.25, 3, 10,
+                            target.collided_left ? rl::RAYWHITE : target.left < 0 ? rl::RED : rl::GREEN,
+                        );
+                        ZString s = (ZString)rl::textFormat("%+d", target.left);
+                        draw_score_text(left_center, s);
 
-                    ZString s = (ZString)rl::textFormat("%+d", target.left);
-                    draw_score_text(left_center, s);
+                        BoundingBox left_box = {
+                            .min = left_center - (Vector3){0.25, 3, 10}/2,
+                            .max = left_center + (Vector3){0.25, 3, 10}/2,
+                        };
 
-                    rl::drawCube(
-                        right_center,
-                        0.25, 3, 10,
-                        target.right < 0 ? rl::RED : rl::GREEN,
-                    );
+                        if (rl::checkCollisionBoxes(player_box, left_box) && !target.collided_left) {
+                            score += target.left;
+                            target.collided_left = true;
+                        }
+                    }
 
-                    s = (ZString)rl::textFormat("%+d", target.right);
-                    draw_score_text(right_center, s);
+                    if (target.right != 0) {
+                        rl::drawCube(
+                            right_center,
+                            0.25, 3, 10,
+                            target.collided_right ? rl::RAYWHITE : target.right < 0 ? rl::RED : rl::GREEN,
+                        );
+                        ZString s = (ZString)rl::textFormat("%+d", target.right);
+                        draw_score_text(right_center, s);
 
-                    target.pos.x += 0.15;
+                        BoundingBox right_box = {
+                            .min = right_center - (Vector3){0.25, 3, 10}/2,
+                            .max = right_center + (Vector3){0.25, 3, 10}/2,
+                        };
+
+                        if (rl::checkCollisionBoxes(player_box, right_box) && !target.collided_right) {
+                            score += target.right;
+                            target.collided_right = true;
+                        }
+                    }
+
+                    target.pos.x += 0.75;
 
                     if (target.pos.x > gap) {
                         target.pos.x = -(start + 9 * gap);
-                        target.left = rl::getRandomValue(-50, 50);
-                        target.right = rl::getRandomValue(-50, 50);
+                        target.left = get_random();
+                        target.right = get_random();
+                        target.collided_left = false;
+                        target.collided_right = false;
                     }
                 }
 
             rl::endShaderMode(); rl::endMode3D();
+
+            int width = rl::getRenderWidth();
+            int score_size = 45;
+            CChar *score_text = rl::textFormat("%d", score);
+            int score_width = rl::measureText(score_text, score_size);
+            rl::drawText(score_text, width/2 - score_width/2, 10, score_size, rl::BLACK);
         rl::endDrawing();
     }
 

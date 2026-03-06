@@ -265,16 +265,23 @@ fn Color Side.color(self) {
     return self.effect < 0 ? rl::RED : rl::GREEN;
 }
 
-fn void Side.collide(&self, int* score) {
-    if (self.collided) return;
-
+fn bool Side.collide(&self, int* score) {
+    if (self.collided) return false;
     *score += self.effect;
     self.collided = true;
+    return true;
 }
 
 const Vector3 TARGET_SIZE = { 0.25, 3, 10 };
 
-fn void Side.draw(&self, Vector3 center, BoundingBox player_box, int* score) {
+fn void Side.draw(
+    &self,
+    Vector3 center,
+    BoundingBox player_box,
+    int* score,
+    Sound good,
+    Sound bad,
+) {
     if (self.effect == 0) return;
 
     rl::drawCube(
@@ -291,7 +298,13 @@ fn void Side.draw(&self, Vector3 center, BoundingBox player_box, int* score) {
     };
 
     if (rl::checkCollisionBoxes(player_box, box)) {
-        self.collide(score);
+        if (self.collide(score)) {
+            if (self.effect > 0) {
+                rl::playSound(good);
+            } else {
+                rl::playSound(bad);
+            }
+        }
     }
 }
 
@@ -312,14 +325,16 @@ fn void draw_score(int score) {
 fn void main()
 {
     rl::setConfigFlags(rl::FLAG_VSYNC_HINT | rl::FLAG_MSAA_4X_HINT);
+    rl::initAudioDevice();
     rl::initWindow(800, 600, "Brainrot");
 
-    rl::Camera camera;
-    camera.position   = { 30, 10,  0 };         // Camera position
-    camera.target     = {  0,  0,  0 };         // Camera looking at point
-    camera.up         = {  0,  1,  0 };         // Camera up vector (rotation towards target)
-    camera.fovy       = 45;                     // Camera field-of-view Y
-    camera.projection = rl::CAMERA_PERSPECTIVE; // Camera projection type
+    rl::Camera camera = {
+        .position   = { 30, 10,  0 },         // Camera position
+        .target     = {  0,  0,  0 },         // Camera looking at point
+        .up         = {  0,  1,  0 },         // Camera up vector (rotation towards target)
+        .fovy       = 45,                     // Camera field-of-view Y
+        .projection = rl::CAMERA_PERSPECTIVE, // Camera projection type
+    };
 
     // Load basic lighting shader
     Shader shader = rl::loadShader("shaders/lighting.vs", "shaders/lighting.fs");
@@ -347,7 +362,11 @@ fn void main()
         });
     }
 
+    Sound good = rl::loadSound("./assets/se_twobeep.wav");
+    Sound bad = rl::loadSound("./assets/se_bump.wav");
+
     rl::setTargetFPS(60);
+    rl::setMasterVolume(0.5);
     int score = 10;
     while (!rl::windowShouldClose()) {
         // rl::updateCamera(&camera, rl::CAMERA_THIRD_PERSON);
@@ -393,8 +412,8 @@ fn void main()
                     Vector3 left_center = target.pos + TARGET_SIZE/2;
                     Vector3 right_center = target.pos + (Vector3){ TARGET_SIZE.x/2, TARGET_SIZE.y/2, -TARGET_SIZE.z/2 };
 
-                    target.left.draw(left_center, player_box, &score);
-                    target.right.draw(right_center, player_box, &score);
+                    target.left.draw(left_center, player_box, &score, good, bad);
+                    target.right.draw(right_center, player_box, &score, good, bad);
 
                     target.pos.x += 0.75;
 
@@ -410,7 +429,7 @@ fn void main()
             draw_score(score);
         rl::endDrawing();
     }
-
     rl::unloadShader(shader);
+    rl::closeAudioDevice();
     rl::closeWindow();
 }

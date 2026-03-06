@@ -316,7 +316,8 @@ struct Target {
 
 fn void draw_score(int score) {
     int width = rl::getRenderWidth();
-    int score_size = 45;
+    int height = rl::getRenderHeight();
+    int score_size = height / 10;
     CChar *score_text = rl::textFormat("%d", score);
     int score_width = rl::measureText(score_text, score_size);
     rl::drawText(score_text, width/2 - score_width/2, 10, score_size, rl::BLACK);
@@ -324,7 +325,7 @@ fn void draw_score(int score) {
 
 fn void main()
 {
-    rl::setConfigFlags(rl::FLAG_VSYNC_HINT | rl::FLAG_MSAA_4X_HINT);
+    rl::setConfigFlags(rl::FLAG_VSYNC_HINT | rl::FLAG_MSAA_4X_HINT | rl::FLAG_WINDOW_RESIZABLE);
     rl::initAudioDevice();
     rl::initWindow(800, 600, "Brainrot");
 
@@ -380,7 +381,6 @@ fn void main()
 
         float player_height = 2;
         rl::beginDrawing();
-            rl::clearBackground(rl::SKYBLUE);
 
             Vector3 speed = { 0, 0, 0.2 };
 
@@ -397,11 +397,20 @@ fn void main()
             if (rl::isKeyPressed(rl::KEY_SPACE)) {
                 paused ^= true;
             }
+            if (rl::isKeyPressed(rl::KEY_S)) {
+                Image screen = rl::loadImageFromScreen();
+                rl::exportImage(screen, "img/screenshot.png");
+                rl::unloadImage(screen);
+            }
+            if (rl::isKeyPressed(rl::KEY_ZERO)) {
+                position.z = 0;
+            }
 
             BoundingBox player_box = {
                 .min = position - player_height/2,
                 .max = position + player_height/2
             };
+            rl::clearBackground(rl::SKYBLUE);
             rl::beginMode3D(camera); rl::beginShaderMode(shader);
                 // platform
                 rl::drawCube({ -125, 0, 0 }, 300, 0.5, 20, rl::RAYWHITE);

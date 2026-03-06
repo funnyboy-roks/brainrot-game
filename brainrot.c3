@@ -245,12 +245,68 @@ fn int get_random() {
     }
 }
 
+struct Side {
+    int effect;
+    bool collided;
+}
+
+fn Side new_side() {
+    return (Side) {
+        .effect = get_random(),
+        .collided = false,
+    };
+}
+
+fn Color Side.color(self) {
+    if (self.collided) {
+        return rl::RAYWHITE;
+    }
+
+    return self.effect < 0 ? rl::RED : rl::GREEN;
+}
+
+fn void Side.collide(&self, int* score) {
+    if (self.collided) return;
+
+    *score += self.effect;
+    self.collided = true;
+}
+
+const Vector3 TARGET_SIZE = { 0.25, 3, 10 };
+
+fn void Side.draw(&self, Vector3 center, BoundingBox player_box, int* score) {
+    if (self.effect == 0) return;
+
+    rl::drawCube(
+        center,
+        TARGET_SIZE.x, TARGET_SIZE.y, TARGET_SIZE.z,
+        self.color(),
+    );
+    ZString s = (ZString)rl::textFormat("%+d", self.effect);
+    draw_score_text(center, s);
+
+    BoundingBox box = {
+        .min = center - TARGET_SIZE/2,
+        .max = center + TARGET_SIZE/2,
+    };
+
+    if (rl::checkCollisionBoxes(player_box, box)) {
+        self.collide(score);
+    }
+}
+
 struct Target {
     Vector3 pos;
-    int left;
-    int right;
-    bool collided_left;
-    bool collided_right;
+    Side left;
+    Side right;
+}
+
+fn void draw_score(int score) {
+    int width = rl::getRenderWidth();
+    int score_size = 45;
+    CChar *score_text = rl::textFormat("%d", score);
+    int score_width = rl::measureText(score_text, score_size);
+    rl::drawText(score_text, width/2 - score_width/2, 10, score_size, rl::BLACK);
 }
 
 fn void main()
@@ -264,7 +320,6 @@ fn void main()
     camera.up         = {  0,  1,  0 };         // Camera up vector (rotation towards target)
     camera.fovy       = 45;                     // Camera field-of-view Y
     camera.projection = rl::CAMERA_PERSPECTIVE; // Camera projection type
-
 
     // Load basic lighting shader
     Shader shader = rl::loadShader("shaders/lighting.vs", "shaders/lighting.fs");
@@ -287,10 +342,8 @@ fn void main()
     for (int i = 0; i < 10; i++) {
         targets.push({
             .pos = { -(start + (float)i * gap), 0.25, 0 },
-            .left = get_random(),
-            .right = get_random(),
-            .collided_left = false,
-            .collided_right = false,
+            .left = new_side(),
+            .right = new_side(),
         });
     }
 
@@ -328,7 +381,7 @@ fn void main()
             };
             rl::beginMode3D(camera); rl::beginShaderMode(shader);
                 // platform
-                rl::drawCube({-125, 0, 0}, 300, 0.5, 20, rl::RAYWHITE);
+                rl::drawCube({ -125, 0, 0 }, 300, 0.5, 20, rl::RAYWHITE);
 
                 rl::drawCube(
                     position + (Vector3){ 0, player_height/2, 0 },
@@ -336,70 +389,25 @@ fn void main()
                     rl::RED,
                 );
 
-                Vector3 left_offset = { 0, 3.0/2, 5 };
-                Vector3 right_offset = { 0, 3.0/2, -5 };
                 foreach (&target : targets) {
-                    Vector3 left_center = target.pos + left_offset;
-                    Vector3 right_center = target.pos + right_offset;
+                    Vector3 left_center = target.pos + TARGET_SIZE/2;
+                    Vector3 right_center = target.pos + (Vector3){ TARGET_SIZE.x/2, TARGET_SIZE.y/2, -TARGET_SIZE.z/2 };
 
-                    if (target.left != 0) {
-                        rl::drawCube(
-                            left_center,
-                            0.25, 3, 10,
-                            target.collided_left ? rl::RAYWHITE : target.left < 0 ? rl::RED : rl::GREEN,
-                        );
-                        ZString s = (ZString)rl::textFormat("%+d", target.left);
-                        draw_score_text(left_center, s);
-
-                        BoundingBox left_box = {
-                            .min = left_center - (Vector3){0.25, 3, 10}/2,
-                            .max = left_center + (Vector3){0.25, 3, 10}/2,
-                        };
-
-                        if (rl::checkCollisionBoxes(player_box, left_box) && !target.collided_left) {
-                            score += target.left;
-                            target.collided_left = true;
-                        }
-                    }
-
-                    if (target.right != 0) {
-                        rl::drawCube(
-                            right_center,
-                            0.25, 3, 10,
-                            target.collided_right ? rl::RAYWHITE : target.right < 0 ? rl::RED : rl::GREEN,
-                        );
-                        ZString s = (ZString)rl::textFormat("%+d", target.right);
-                        draw_score_text(right_center, s);
-
-                        BoundingBox right_box = {
-                            .min = right_center - (Vector3){0.25, 3, 10}/2,
-                            .max = right_center + (Vector3){0.25, 3, 10}/2,
-                        };
-
-                        if (rl::checkCollisionBoxes(player_box, right_box) && !target.collided_right) {
-                            score += target.right;
-                            target.collided_right = true;
-                        }
-                    }
+                    target.left.draw(left_center, player_box, &score);
+                    target.right.draw(right_center, player_box, &score);
 
                     target.pos.x += 0.75;
 
                     if (target.pos.x > gap) {
                         target.pos.x = -(start + 9 * gap);
-                        target.left = get_random();
-                        target.right = get_random();
-                        target.collided_left = false;
-                        target.collided_right = false;
+                        target.left = new_side();
+                        target.right = new_side();
                     }
                 }
 
             rl::endShaderMode(); rl::endMode3D();
 
-            int width = rl::getRenderWidth();
-            int score_size = 45;
-            CChar *score_text = rl::textFormat("%d", score);
-            int score_width = rl::measureText(score_text, score_size);
-            rl::drawText(score_text, width/2 - score_width/2, 10, score_size, rl::BLACK);
+            draw_score(score);
         rl::endDrawing();
     }
 

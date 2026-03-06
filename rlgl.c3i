@@ -1,0 +1,994 @@
+
+module raylib::rlgl;
+
+const RLGL_VERSION = "5.0";
+
+const RL_DEFAULT_BATCH_BUFFER_ELEMENTS = 8192;
+const RL_DEFAULT_BATCH_BUFFERS = 1;
+const RL_DEFAULT_BATCH_DRAWCALLS = 256;
+const RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS = 4;
+const RL_MAX_MATRIX_STACK_SIZE = 32;
+const RL_MAX_SHADER_LOCATIONS = 32;
+const RL_CULL_DISTANCE_NEAR = 0.01;
+const RL_CULL_DISTANCE_FAR = 1000.0;
+const RL_TEXTURE_WRAP_S = 0x2802;
+const RL_TEXTURE_WRAP_T = 0x2803;
+const RL_TEXTURE_MAG_FILTER = 0x2800;
+const RL_TEXTURE_MIN_FILTER = 0x2801;
+const RL_TEXTURE_FILTER_NEAREST = 0x2600;
+const RL_TEXTURE_FILTER_LINEAR = 0x2601;
+const RL_TEXTURE_FILTER_MIP_NEAREST = 0x2700;
+const RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR = 0x2702;
+const RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST = 0x2701;
+const RL_TEXTURE_FILTER_MIP_LINEAR = 0x2703;
+const RL_TEXTURE_FILTER_ANISOTROPIC = 0x3000;
+const RL_TEXTURE_MIPMAP_BIAS_RATIO = 0x4000;
+const RL_TEXTURE_WRAP_REPEAT = 0x2901;
+const RL_TEXTURE_WRAP_CLAMP = 0x812F;
+const RL_TEXTURE_WRAP_MIRROR_REPEAT = 0x8370;
+const RL_TEXTURE_WRAP_MIRROR_CLAMP = 0x8742;
+const RL_MODELVIEW = 0x1700;
+const RL_PROJECTION = 0x1701;
+const RL_TEXTURE = 0x1702;
+const RL_LINES = 0x0001;
+const RL_TRIANGLES = 0x0004;
+const RL_QUADS = 0x0007;
+const RL_UNSIGNED_BYTE = 0x1401;
+const RL_FLOAT = 0x1406;
+const RL_STREAM_DRAW = 0x88E0;
+const RL_STREAM_READ = 0x88E1;
+const RL_STREAM_COPY = 0x88E2;
+const RL_STATIC_DRAW = 0x88E4;
+const RL_STATIC_READ = 0x88E5;
+const RL_STATIC_COPY = 0x88E6;
+const RL_DYNAMIC_DRAW = 0x88E8;
+const RL_DYNAMIC_READ = 0x88E9;
+const RL_DYNAMIC_COPY = 0x88EA;
+const RL_FRAGMENT_SHADER = 0x8B30;
+const RL_VERTEX_SHADER = 0x8B31;
+const RL_COMPUTE_SHADER = 0x91B9;
+const RL_ZERO = 0;
+const RL_ONE = 1;
+const RL_SRC_COLOR = 0x0300;
+const RL_ONE_MINUS_SRC_COLOR = 0x0301;
+const RL_SRC_ALPHA = 0x0302;
+const RL_ONE_MINUS_SRC_ALPHA = 0x0303;
+const RL_DST_ALPHA = 0x0304;
+const RL_ONE_MINUS_DST_ALPHA = 0x0305;
+const RL_DST_COLOR = 0x0306;
+const RL_ONE_MINUS_DST_COLOR = 0x0307;
+const RL_SRC_ALPHA_SATURATE = 0x0308;
+const RL_CONSTANT_COLOR = 0x8001;
+const RL_ONE_MINUS_CONSTANT_COLOR = 0x8002;
+const RL_CONSTANT_ALPHA = 0x8003;
+const RL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
+const RL_FUNC_ADD = 0x8006;
+const RL_MIN = 0x8007;
+const RL_MAX = 0x8008;
+const RL_FUNC_SUBTRACT = 0x800A;
+const RL_FUNC_REVERSE_SUBTRACT = 0x800B;
+const RL_BLEND_EQUATION = 0x8009;
+const RL_BLEND_EQUATION_RGB = 0x8009;
+const RL_BLEND_EQUATION_ALPHA = 0x883D;
+const RL_BLEND_DST_RGB = 0x80C8;
+const RL_BLEND_SRC_RGB = 0x80C9;
+const RL_BLEND_DST_ALPHA = 0x80CA;
+const RL_BLEND_SRC_ALPHA = 0x80CB;
+const RL_BLEND_COLOR = 0x8005;
+const RL_READ_FRAMEBUFFER = 0x8CA8;
+const RL_DRAW_FRAMEBUFFER = 0x8CA9;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_POSITION = 0;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD = 1;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_NORMAL = 2;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_COLOR = 3;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT = 4;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2 = 5;
+const RL_DEFAULT_SHADER_ATTRIB_LOCATION_INDICES = 6;
+const RL_SHADER_LOC_MAP_DIFFUSE = RL_SHADER_LOC_MAP_ALBEDO;
+const RL_SHADER_LOC_MAP_SPECULAR = RL_SHADER_LOC_MAP_METALNESS;
+
+struct Matrix {
+  float m0;
+  float m4;
+  float m8;
+  float m12;
+  float m1;
+  float m5;
+  float m9;
+  float m13;
+  float m2;
+  float m6;
+  float m10;
+  float m14;
+  float m3;
+  float m7;
+  float m11;
+  float m15;
+}
+
+struct RlVertexBuffer {
+  CInt elementCount;
+  float* vertices;
+  float* texcoords;
+  float* normals;
+  char* colors;
+  CUInt* indices;
+  CUInt vaoId;
+  CUInt[5] vboId;
+}
+
+struct RlDrawCall {
+  CInt mode;
+  CInt vertexCount;
+  CInt vertexAlignment;
+  CUInt textureId;
+}
+
+struct RlRenderBatch {
+  CInt bufferCount;
+  CInt currentBuffer;
+  RlVertexBuffer* vertexBuffer;
+  RlDrawCall* draws;
+  CInt drawCounter;
+  float currentDepth;
+}
+
+typedef RlGlVersion = inline CUInt;
+const RlGlVersion RL_OPENGL_11 = 1;
+const RlGlVersion RL_OPENGL_21 = 2;
+const RlGlVersion RL_OPENGL_33 = 3;
+const RlGlVersion RL_OPENGL_43 = 4;
+const RlGlVersion RL_OPENGL_ES_20 = 5;
+const RlGlVersion RL_OPENGL_ES_30 = 6;
+
+typedef RlTraceLogLevel = inline CUInt;
+const RlTraceLogLevel RL_LOG_ALL = 0;
+const RlTraceLogLevel RL_LOG_TRACE = 1;
+const RlTraceLogLevel RL_LOG_DEBUG = 2;
+const RlTraceLogLevel RL_LOG_INFO = 3;
+const RlTraceLogLevel RL_LOG_WARNING = 4;
+const RlTraceLogLevel RL_LOG_ERROR = 5;
+const RlTraceLogLevel RL_LOG_FATAL = 6;
+const RlTraceLogLevel RL_LOG_NONE = 7;
+
+typedef RlPixelFormat = inline CUInt;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA = 2;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5 = 3;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8 = 4;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1 = 5;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4 = 6;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 = 7;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R32 = 8;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32 = 9;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = 10;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R16 = 11;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16 = 12;
+const RlPixelFormat RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = 13;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_DXT1_RGB = 14;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA = 15;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA = 16;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA = 17;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_ETC1_RGB = 18;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_ETC2_RGB = 19;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 20;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_PVRT_RGB = 21;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA = 22;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_ASTC_4X4_RGBA = 23;
+const RlPixelFormat RL_PIXELFORMAT_COMPRESSED_ASTC_8X8_RGBA = 24;
+
+typedef RlTextureFilter = inline CUInt;
+const RlTextureFilter RL_TEXTURE_FILTER_POINT = 0;
+const RlTextureFilter RL_TEXTURE_FILTER_BILINEAR = 1;
+const RlTextureFilter RL_TEXTURE_FILTER_TRILINEAR = 2;
+const RlTextureFilter RL_TEXTURE_FILTER_ANISOTROPIC_4X = 3;
+const RlTextureFilter RL_TEXTURE_FILTER_ANISOTROPIC_8X = 4;
+const RlTextureFilter RL_TEXTURE_FILTER_ANISOTROPIC_16X = 5;
+
+typedef RlBlendMode = inline CUInt;
+const RlBlendMode RL_BLEND_ALPHA = 0;
+const RlBlendMode RL_BLEND_ADDITIVE = 1;
+const RlBlendMode RL_BLEND_MULTIPLIED = 2;
+const RlBlendMode RL_BLEND_ADD_COLORS = 3;
+const RlBlendMode RL_BLEND_SUBTRACT_COLORS = 4;
+const RlBlendMode RL_BLEND_ALPHA_PREMULTIPLY = 5;
+const RlBlendMode RL_BLEND_CUSTOM = 6;
+const RlBlendMode RL_BLEND_CUSTOM_SEPARATE = 7;
+
+typedef RlShaderLocationIndex = inline CUInt;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_POSITION = 0;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_TEXCOORD01 = 1;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_TEXCOORD02 = 2;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_NORMAL = 3;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_TANGENT = 4;
+const RlShaderLocationIndex RL_SHADER_LOC_VERTEX_COLOR = 5;
+const RlShaderLocationIndex RL_SHADER_LOC_MATRIX_MVP = 6;
+const RlShaderLocationIndex RL_SHADER_LOC_MATRIX_VIEW = 7;
+const RlShaderLocationIndex RL_SHADER_LOC_MATRIX_PROJECTION = 8;
+const RlShaderLocationIndex RL_SHADER_LOC_MATRIX_MODEL = 9;
+const RlShaderLocationIndex RL_SHADER_LOC_MATRIX_NORMAL = 10;
+const RlShaderLocationIndex RL_SHADER_LOC_VECTOR_VIEW = 11;
+const RlShaderLocationIndex RL_SHADER_LOC_COLOR_DIFFUSE = 12;
+const RlShaderLocationIndex RL_SHADER_LOC_COLOR_SPECULAR = 13;
+const RlShaderLocationIndex RL_SHADER_LOC_COLOR_AMBIENT = 14;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_ALBEDO = 15;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_METALNESS = 16;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_NORMAL = 17;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_ROUGHNESS = 18;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_OCCLUSION = 19;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_EMISSION = 20;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_HEIGHT = 21;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_CUBEMAP = 22;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_IRRADIANCE = 23;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_PREFILTER = 24;
+const RlShaderLocationIndex RL_SHADER_LOC_MAP_BRDF = 25;
+
+typedef RlShaderUniformDataType = inline CUInt;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_FLOAT = 0;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_VEC2 = 1;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_VEC3 = 2;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_VEC4 = 3;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_INT = 4;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_IVEC2 = 5;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_IVEC3 = 6;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_IVEC4 = 7;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_UINT = 8;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_UIVEC2 = 9;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_UIVEC3 = 10;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_UIVEC4 = 11;
+const RlShaderUniformDataType RL_SHADER_UNIFORM_SAMPLER2D = 12;
+
+typedef RlShaderAttributeDataType = inline CUInt;
+const RlShaderAttributeDataType RL_SHADER_ATTRIB_FLOAT = 0;
+const RlShaderAttributeDataType RL_SHADER_ATTRIB_VEC2 = 1;
+const RlShaderAttributeDataType RL_SHADER_ATTRIB_VEC3 = 2;
+const RlShaderAttributeDataType RL_SHADER_ATTRIB_VEC4 = 3;
+
+typedef RlFramebufferAttachType = inline CUInt;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL0 = 0;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL1 = 1;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL2 = 2;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL3 = 3;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL4 = 4;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL5 = 5;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL6 = 6;
+const RlFramebufferAttachType RL_ATTACHMENT_COLOR_CHANNEL7 = 7;
+const RlFramebufferAttachType RL_ATTACHMENT_DEPTH = 100;
+const RlFramebufferAttachType RL_ATTACHMENT_STENCIL = 200;
+
+typedef RlFramebufferAttachTextureType = inline CUInt;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_POSITIVE_X = 0;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = 1;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = 2;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = 3;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = 4;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = 5;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_TEXTURE2D = 100;
+const RlFramebufferAttachTextureType RL_ATTACHMENT_RENDERBUFFER = 200;
+
+typedef RlCullMode = inline CUInt;
+const RlCullMode RL_CULL_FACE_FRONT = 0;
+const RlCullMode RL_CULL_FACE_BACK = 1;
+
+fn void rlMatrixMode(
+  CInt mode)
+@extern("rlMatrixMode");
+
+fn void rlPushMatrix()
+@extern("rlPushMatrix");
+
+fn void rlPopMatrix()
+@extern("rlPopMatrix");
+
+fn void rlLoadIdentity()
+@extern("rlLoadIdentity");
+
+fn void rlTranslatef(
+  float x,
+  float y,
+  float z)
+@extern("rlTranslatef");
+
+fn void rlRotatef(
+  float angle,
+  float x,
+  float y,
+  float z)
+@extern("rlRotatef");
+
+fn void rlScalef(
+  float x,
+  float y,
+  float z)
+@extern("rlScalef");
+
+fn void rlMultMatrixf(
+  float* matf)
+@extern("rlMultMatrixf");
+
+fn void rlFrustum(
+  double left,
+  double right,
+  double bottom,
+  double top,
+  double znear,
+  double zfar)
+@extern("rlFrustum");
+
+fn void rlOrtho(
+  double left,
+  double right,
+  double bottom,
+  double top,
+  double znear,
+  double zfar)
+@extern("rlOrtho");
+
+fn void rlViewport(
+  CInt x,
+  CInt y,
+  CInt width,
+  CInt height)
+@extern("rlViewport");
+
+fn void rlSetClipPlanes(
+  double nearPlane,
+  double farPlane)
+@extern("rlSetClipPlanes");
+
+fn double rlGetCullDistanceNear()
+@extern("rlGetCullDistanceNear");
+
+fn double rlGetCullDistanceFar()
+@extern("rlGetCullDistanceFar");
+
+fn void rlBegin(
+  CInt mode)
+@extern("rlBegin");
+
+fn void rlEnd()
+@extern("rlEnd");
+
+fn void rlVertex2i(
+  CInt x,
+  CInt y)
+@extern("rlVertex2i");
+
+fn void rlVertex2f(
+  float x,
+  float y)
+@extern("rlVertex2f");
+
+fn void rlVertex3f(
+  float x,
+  float y,
+  float z)
+@extern("rlVertex3f");
+
+fn void rlTexCoord2f(
+  float x,
+  float y)
+@extern("rlTexCoord2f");
+
+fn void rlNormal3f(
+  float x,
+  float y,
+  float z)
+@extern("rlNormal3f");
+
+fn void rlColor4ub(
+  char r,
+  char g,
+  char b,
+  char a)
+@extern("rlColor4ub");
+
+fn void rlColor3f(
+  float x,
+  float y,
+  float z)
+@extern("rlColor3f");
+
+fn void rlColor4f(
+  float x,
+  float y,
+  float z,
+  float w)
+@extern("rlColor4f");
+
+fn bool rlEnableVertexArray(
+  CUInt vaoId)
+@extern("rlEnableVertexArray");
+
+fn void rlDisableVertexArray()
+@extern("rlDisableVertexArray");
+
+fn void rlEnableVertexBuffer(
+  CUInt id)
+@extern("rlEnableVertexBuffer");
+
+fn void rlDisableVertexBuffer()
+@extern("rlDisableVertexBuffer");
+
+fn void rlEnableVertexBufferElement(
+  CUInt id)
+@extern("rlEnableVertexBufferElement");
+
+fn void rlDisableVertexBufferElement()
+@extern("rlDisableVertexBufferElement");
+
+fn void rlEnableVertexAttribute(
+  CUInt index)
+@extern("rlEnableVertexAttribute");
+
+fn void rlDisableVertexAttribute(
+  CUInt index)
+@extern("rlDisableVertexAttribute");
+
+fn void rlActiveTextureSlot(
+  CInt slot)
+@extern("rlActiveTextureSlot");
+
+fn void rlEnableTexture(
+  CUInt id)
+@extern("rlEnableTexture");
+
+fn void rlDisableTexture()
+@extern("rlDisableTexture");
+
+fn void rlEnableTextureCubemap(
+  CUInt id)
+@extern("rlEnableTextureCubemap");
+
+fn void rlDisableTextureCubemap()
+@extern("rlDisableTextureCubemap");
+
+fn void rlTextureParameters(
+  CUInt id,
+  CInt param,
+  CInt value)
+@extern("rlTextureParameters");
+
+fn void rlCubemapParameters(
+  CUInt id,
+  CInt param,
+  CInt value)
+@extern("rlCubemapParameters");
+
+fn void rlEnableShader(
+  CUInt id)
+@extern("rlEnableShader");
+
+fn void rlDisableShader()
+@extern("rlDisableShader");
+
+fn void rlEnableFramebuffer(
+  CUInt id)
+@extern("rlEnableFramebuffer");
+
+fn void rlDisableFramebuffer()
+@extern("rlDisableFramebuffer");
+
+fn CUInt rlGetActiveFramebuffer()
+@extern("rlGetActiveFramebuffer");
+
+fn void rlActiveDrawBuffers(
+  CInt count)
+@extern("rlActiveDrawBuffers");
+
+fn void rlBlitFramebuffer(
+  CInt srcX,
+  CInt srcY,
+  CInt srcWidth,
+  CInt srcHeight,
+  CInt dstX,
+  CInt dstY,
+  CInt dstWidth,
+  CInt dstHeight,
+  CInt bufferMask)
+@extern("rlBlitFramebuffer");
+
+fn void rlBindFramebuffer(
+  CUInt target,
+  CUInt framebuffer)
+@extern("rlBindFramebuffer");
+
+fn void rlEnableColorBlend()
+@extern("rlEnableColorBlend");
+
+fn void rlDisableColorBlend()
+@extern("rlDisableColorBlend");
+
+fn void rlEnableDepthTest()
+@extern("rlEnableDepthTest");
+
+fn void rlDisableDepthTest()
+@extern("rlDisableDepthTest");
+
+fn void rlEnableDepthMask()
+@extern("rlEnableDepthMask");
+
+fn void rlDisableDepthMask()
+@extern("rlDisableDepthMask");
+
+fn void rlEnableBackfaceCulling()
+@extern("rlEnableBackfaceCulling");
+
+fn void rlDisableBackfaceCulling()
+@extern("rlDisableBackfaceCulling");
+
+fn void rlColorMask(
+  bool r,
+  bool g,
+  bool b,
+  bool a)
+@extern("rlColorMask");
+
+fn void rlSetCullFace(
+  CInt mode)
+@extern("rlSetCullFace");
+
+fn void rlEnableScissorTest()
+@extern("rlEnableScissorTest");
+
+fn void rlDisableScissorTest()
+@extern("rlDisableScissorTest");
+
+fn void rlScissor(
+  CInt x,
+  CInt y,
+  CInt width,
+  CInt height)
+@extern("rlScissor");
+
+fn void rlEnableWireMode()
+@extern("rlEnableWireMode");
+
+fn void rlEnablePointMode()
+@extern("rlEnablePointMode");
+
+fn void rlDisableWireMode()
+@extern("rlDisableWireMode");
+
+fn void rlSetLineWidth(
+  float width)
+@extern("rlSetLineWidth");
+
+fn float rlGetLineWidth()
+@extern("rlGetLineWidth");
+
+fn void rlEnableSmoothLines()
+@extern("rlEnableSmoothLines");
+
+fn void rlDisableSmoothLines()
+@extern("rlDisableSmoothLines");
+
+fn void rlEnableStereoRender()
+@extern("rlEnableStereoRender");
+
+fn void rlDisableStereoRender()
+@extern("rlDisableStereoRender");
+
+fn bool rlIsStereoRenderEnabled()
+@extern("rlIsStereoRenderEnabled");
+
+fn void rlClearColor(
+  char r,
+  char g,
+  char b,
+  char a)
+@extern("rlClearColor");
+
+fn void rlClearScreenBuffers()
+@extern("rlClearScreenBuffers");
+
+fn void rlCheckErrors()
+@extern("rlCheckErrors");
+
+fn void rlSetBlendMode(
+  CInt mode)
+@extern("rlSetBlendMode");
+
+fn void rlSetBlendFactors(
+  CInt glSrcFactor,
+  CInt glDstFactor,
+  CInt glEquation)
+@extern("rlSetBlendFactors");
+
+fn void rlSetBlendFactorsSeparate(
+  CInt glSrcRGB,
+  CInt glDstRGB,
+  CInt glSrcAlpha,
+  CInt glDstAlpha,
+  CInt glEqRGB,
+  CInt glEqAlpha)
+@extern("rlSetBlendFactorsSeparate");
+
+fn void rlglInit(
+  CInt width,
+  CInt height)
+@extern("rlglInit");
+
+fn void rlglClose()
+@extern("rlglClose");
+
+fn void rlLoadExtensions(
+  void* loader)
+@extern("rlLoadExtensions");
+
+fn CInt rlGetVersion()
+@extern("rlGetVersion");
+
+fn void rlSetFramebufferWidth(
+  CInt width)
+@extern("rlSetFramebufferWidth");
+
+fn CInt rlGetFramebufferWidth()
+@extern("rlGetFramebufferWidth");
+
+fn void rlSetFramebufferHeight(
+  CInt height)
+@extern("rlSetFramebufferHeight");
+
+fn CInt rlGetFramebufferHeight()
+@extern("rlGetFramebufferHeight");
+
+fn CUInt rlGetTextureIdDefault()
+@extern("rlGetTextureIdDefault");
+
+fn CUInt rlGetShaderIdDefault()
+@extern("rlGetShaderIdDefault");
+
+fn CInt* rlGetShaderLocsDefault()
+@extern("rlGetShaderLocsDefault");
+
+fn RlRenderBatch rlLoadRenderBatch(
+  CInt numBuffers,
+  CInt bufferElements)
+@extern("rlLoadRenderBatch");
+
+fn void rlUnloadRenderBatch(
+  RlRenderBatch batch)
+@extern("rlUnloadRenderBatch");
+
+fn void rlDrawRenderBatch(
+  RlRenderBatch* batch)
+@extern("rlDrawRenderBatch");
+
+fn void rlSetRenderBatchActive(
+  RlRenderBatch* batch)
+@extern("rlSetRenderBatchActive");
+
+fn void rlDrawRenderBatchActive()
+@extern("rlDrawRenderBatchActive");
+
+fn bool rlCheckRenderBatchLimit(
+  CInt vCount)
+@extern("rlCheckRenderBatchLimit");
+
+fn void rlSetTexture(
+  CUInt id)
+@extern("rlSetTexture");
+
+fn CUInt rlLoadVertexArray()
+@extern("rlLoadVertexArray");
+
+fn CUInt rlLoadVertexBuffer(
+  void* buffer,
+  CInt size,
+  bool dynamic)
+@extern("rlLoadVertexBuffer");
+
+fn CUInt rlLoadVertexBufferElement(
+  void* buffer,
+  CInt size,
+  bool dynamic)
+@extern("rlLoadVertexBufferElement");
+
+fn void rlUpdateVertexBuffer(
+  CUInt bufferId,
+  void* data,
+  CInt dataSize,
+  CInt offset)
+@extern("rlUpdateVertexBuffer");
+
+fn void rlUpdateVertexBufferElements(
+  CUInt id,
+  void* data,
+  CInt dataSize,
+  CInt offset)
+@extern("rlUpdateVertexBufferElements");
+
+fn void rlUnloadVertexArray(
+  CUInt vaoId)
+@extern("rlUnloadVertexArray");
+
+fn void rlUnloadVertexBuffer(
+  CUInt vboId)
+@extern("rlUnloadVertexBuffer");
+
+fn void rlSetVertexAttribute(
+  CUInt index,
+  CInt compSize,
+  CInt type,
+  bool normalized,
+  CInt stride,
+  CInt offset)
+@extern("rlSetVertexAttribute");
+
+fn void rlSetVertexAttributeDivisor(
+  CUInt index,
+  CInt divisor)
+@extern("rlSetVertexAttributeDivisor");
+
+fn void rlSetVertexAttributeDefault(
+  CInt locIndex,
+  void* value,
+  CInt attribType,
+  CInt count)
+@extern("rlSetVertexAttributeDefault");
+
+fn void rlDrawVertexArray(
+  CInt offset,
+  CInt count)
+@extern("rlDrawVertexArray");
+
+fn void rlDrawVertexArrayElements(
+  CInt offset,
+  CInt count,
+  void* buffer)
+@extern("rlDrawVertexArrayElements");
+
+fn void rlDrawVertexArrayInstanced(
+  CInt offset,
+  CInt count,
+  CInt instances)
+@extern("rlDrawVertexArrayInstanced");
+
+fn void rlDrawVertexArrayElementsInstanced(
+  CInt offset,
+  CInt count,
+  void* buffer,
+  CInt instances)
+@extern("rlDrawVertexArrayElementsInstanced");
+
+fn CUInt rlLoadTexture(
+  void* data,
+  CInt width,
+  CInt height,
+  CInt format,
+  CInt mipmapCount)
+@extern("rlLoadTexture");
+
+fn CUInt rlLoadTextureDepth(
+  CInt width,
+  CInt height,
+  bool useRenderBuffer)
+@extern("rlLoadTextureDepth");
+
+fn CUInt rlLoadTextureCubemap(
+  void* data,
+  CInt size,
+  CInt format,
+  CInt mipmapCount)
+@extern("rlLoadTextureCubemap");
+
+fn void rlUpdateTexture(
+  CUInt id,
+  CInt offsetX,
+  CInt offsetY,
+  CInt width,
+  CInt height,
+  CInt format,
+  void* data)
+@extern("rlUpdateTexture");
+
+fn void rlGetGlTextureFormats(
+  CInt format,
+  CUInt* glInternalFormat,
+  CUInt* glFormat,
+  CUInt* glType)
+@extern("rlGetGlTextureFormats");
+
+fn CChar* rlGetPixelFormatName(
+  CUInt format)
+@extern("rlGetPixelFormatName");
+
+fn void rlUnloadTexture(
+  CUInt id)
+@extern("rlUnloadTexture");
+
+fn void rlGenTextureMipmaps(
+  CUInt id,
+  CInt width,
+  CInt height,
+  CInt format,
+  CInt* mipmaps)
+@extern("rlGenTextureMipmaps");
+
+fn void* rlReadTexturePixels(
+  CUInt id,
+  CInt width,
+  CInt height,
+  CInt format)
+@extern("rlReadTexturePixels");
+
+fn char* rlReadScreenPixels(
+  CInt width,
+  CInt height)
+@extern("rlReadScreenPixels");
+
+fn CUInt rlLoadFramebuffer()
+@extern("rlLoadFramebuffer");
+
+fn void rlFramebufferAttach(
+  CUInt fboId,
+  CUInt texId,
+  CInt attachType,
+  CInt texType,
+  CInt mipLevel)
+@extern("rlFramebufferAttach");
+
+fn bool rlFramebufferComplete(
+  CUInt id)
+@extern("rlFramebufferComplete");
+
+fn void rlUnloadFramebuffer(
+  CUInt id)
+@extern("rlUnloadFramebuffer");
+
+fn CUInt rlLoadShaderCode(
+  CChar* vsCode,
+  CChar* fsCode)
+@extern("rlLoadShaderCode");
+
+fn CUInt rlCompileShader(
+  CChar* shaderCode,
+  CInt type)
+@extern("rlCompileShader");
+
+fn CUInt rlLoadShaderProgram(
+  CUInt vShaderId,
+  CUInt fShaderId)
+@extern("rlLoadShaderProgram");
+
+fn void rlUnloadShaderProgram(
+  CUInt id)
+@extern("rlUnloadShaderProgram");
+
+fn CInt rlGetLocationUniform(
+  CUInt shaderId,
+  CChar* uniformName)
+@extern("rlGetLocationUniform");
+
+fn CInt rlGetLocationAttrib(
+  CUInt shaderId,
+  CChar* attribName)
+@extern("rlGetLocationAttrib");
+
+fn void rlSetUniform(
+  CInt locIndex,
+  void* value,
+  CInt uniformType,
+  CInt count)
+@extern("rlSetUniform");
+
+fn void rlSetUniformMatrix(
+  CInt locIndex,
+  Matrix mat)
+@extern("rlSetUniformMatrix");
+
+fn void rlSetUniformMatrices(
+  CInt locIndex,
+  Matrix* mat,
+  CInt count)
+@extern("rlSetUniformMatrices");
+
+fn void rlSetUniformSampler(
+  CInt locIndex,
+  CUInt textureId)
+@extern("rlSetUniformSampler");
+
+fn void rlSetShader(
+  CUInt id,
+  CInt* locs)
+@extern("rlSetShader");
+
+fn CUInt rlLoadComputeShaderProgram(
+  CUInt shaderId)
+@extern("rlLoadComputeShaderProgram");
+
+fn void rlComputeShaderDispatch(
+  CUInt groupX,
+  CUInt groupY,
+  CUInt groupZ)
+@extern("rlComputeShaderDispatch");
+
+fn CUInt rlLoadShaderBuffer(
+  CUInt size,
+  void* data,
+  CInt usageHint)
+@extern("rlLoadShaderBuffer");
+
+fn void rlUnloadShaderBuffer(
+  CUInt ssboId)
+@extern("rlUnloadShaderBuffer");
+
+fn void rlUpdateShaderBuffer(
+  CUInt id,
+  void* data,
+  CUInt dataSize,
+  CUInt offset)
+@extern("rlUpdateShaderBuffer");
+
+fn void rlBindShaderBuffer(
+  CUInt id,
+  CUInt index)
+@extern("rlBindShaderBuffer");
+
+fn void rlReadShaderBuffer(
+  CUInt id,
+  void* dest,
+  CUInt count,
+  CUInt offset)
+@extern("rlReadShaderBuffer");
+
+fn void rlCopyShaderBuffer(
+  CUInt destId,
+  CUInt srcId,
+  CUInt destOffset,
+  CUInt srcOffset,
+  CUInt count)
+@extern("rlCopyShaderBuffer");
+
+fn CUInt rlGetShaderBufferSize(
+  CUInt id)
+@extern("rlGetShaderBufferSize");
+
+fn void rlBindImageTexture(
+  CUInt id,
+  CUInt index,
+  CInt format,
+  bool readonly)
+@extern("rlBindImageTexture");
+
+fn Matrix rlGetMatrixModelview()
+@extern("rlGetMatrixModelview");
+
+fn Matrix rlGetMatrixProjection()
+@extern("rlGetMatrixProjection");
+
+fn Matrix rlGetMatrixTransform()
+@extern("rlGetMatrixTransform");
+
+fn Matrix rlGetMatrixProjectionStereo(
+  CInt eye)
+@extern("rlGetMatrixProjectionStereo");
+
+fn Matrix rlGetMatrixViewOffsetStereo(
+  CInt eye)
+@extern("rlGetMatrixViewOffsetStereo");
+
+fn void rlSetMatrixProjection(
+  Matrix proj)
+@extern("rlSetMatrixProjection");
+
+fn void rlSetMatrixModelview(
+  Matrix view)
+@extern("rlSetMatrixModelview");
+
+fn void rlSetMatrixProjectionStereo(
+  Matrix right,
+  Matrix left)
+@extern("rlSetMatrixProjectionStereo");
+
+fn void rlSetMatrixViewOffsetStereo(
+  Matrix right,
+  Matrix left)
+@extern("rlSetMatrixViewOffsetStereo");
+
+fn void rlLoadDrawCube()
+@extern("rlLoadDrawCube");
+
+fn void rlLoadDrawQuad()
+@extern("rlLoadDrawQuad");

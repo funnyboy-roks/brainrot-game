@@ -1,5 +1,6 @@
 import std::io;
 import raylib::rl;
+import raylib::rlgl;
 import std::collections::list;
 
 struct Light {
@@ -77,6 +78,154 @@ fn void update_light_values(Shader shader, Light light)
 
    rl::setShaderValue(shader, light.colorLoc, &color, rl::SHADER_UNIFORM_VEC4);
 }
+const float LETTER_BOUNDRY_SIZE = 0.25;
+const Color LETTER_BOUNDRY_COLOR = rl::VIOLET;
+const bool SHOW_LETTER_BOUNDRY = false;
+
+fn void draw_text_codepoint_3d(
+    Font font,
+    int codepoint,
+    Vector3 position,
+    float fontSize,
+    bool backface,
+    Color tint
+) {
+    // Character index position in sprite font
+    // NOTE: In case a codepoint is not available in the font, index returned points to '?'
+    int index = rl::getGlyphIndex(font, codepoint);
+    float scale = fontSize/(float)font.baseSize;
+
+    // Character destination rectangle on screen
+    // NOTE: We consider charsPadding on drawing
+    position.x += (float)(font.glyphs[index].offsetX - font.glyphPadding)*scale;
+    position.z += (float)(font.glyphs[index].offsetY - font.glyphPadding)*scale;
+
+    // Character source rectangle from font texture atlas
+    // NOTE: We consider chars padding when drawing, it could be required for outline/glow shader effects
+    Rectangle srcRec = { font.recs[index].x - (float)font.glyphPadding, font.recs[index].y - (float)font.glyphPadding,
+                         font.recs[index].width + 2.0f*font.glyphPadding, font.recs[index].height + 2.0f*font.glyphPadding };
+
+    float width = (float)(font.recs[index].width + 2.0f*font.glyphPadding)*scale;
+    float height = (float)(font.recs[index].height + 2.0f*font.glyphPadding)*scale;
+
+    if (font.texture.id > 0)
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+
+        // normalized texture coordinates of the glyph inside the font texture (0.0f -> 1.0f)
+        float tx = srcRec.x/font.texture.width;
+        float ty = srcRec.y/font.texture.height;
+        float tw = (srcRec.x+srcRec.width)/font.texture.width;
+        float th = (srcRec.y+srcRec.height)/font.texture.height;
+
+        if (SHOW_LETTER_BOUNDRY) {
+            rl::drawCubeWiresV(
+                { position.x + width/2, position.y, position.z + height/2},
+                { width, LETTER_BOUNDRY_SIZE, height },
+                LETTER_BOUNDRY_COLOR
+            );
+        }
+
+        rlgl::rlCheckRenderBatchLimit(4 + (backface ? 4 : 0));
+        rlgl::rlSetTexture(font.texture.id);
+
+        rlgl::rlPushMatrix();
+        rlgl::rlTranslatef(position.x, position.y, position.z);
+
+            rlgl::rlBegin(rlgl::RL_QUADS);
+                rlgl::rlColor4ub(tint.r, tint.g, tint.b, tint.a);
+
+                // Front Face
+                rlgl::rlNormal3f(0.0f, 1.0f, 0.0f);                                   // Normal Pointing Up
+                rlgl::rlTexCoord2f(tx, ty); rlgl::rlVertex3f(x,         y, z);              // Top Left Of The Texture and Quad
+                rlgl::rlTexCoord2f(tx, th); rlgl::rlVertex3f(x,         y, z + height);     // Bottom Left Of The Texture and Quad
+                rlgl::rlTexCoord2f(tw, th); rlgl::rlVertex3f(x + width, y, z + height);     // Bottom Right Of The Texture and Quad
+                rlgl::rlTexCoord2f(tw, ty); rlgl::rlVertex3f(x + width, y, z);              // Top Right Of The Texture and Quad
+
+                if (backface) {
+                    // Back Face
+                    rlgl::rlNormal3f(0.0f, -1.0f, 0.0f);                                    // Normal Pointing Down
+                    rlgl::rlTexCoord2f(tx, ty); rlgl::rlVertex3f(x,         y, z);          // Top Right Of The Texture and Quad
+                    rlgl::rlTexCoord2f(tw, ty); rlgl::rlVertex3f(x + width, y, z);          // Top Left Of The Texture and Quad
+                    rlgl::rlTexCoord2f(tw, th); rlgl::rlVertex3f(x + width, y, z + height); // Bottom Left Of The Texture and Quad
+                    rlgl::rlTexCoord2f(tx, th); rlgl::rlVertex3f(x,         y, z + height); // Bottom Right Of The Texture and Quad
+                }
+            rlgl::rlEnd();
+        rlgl::rlPopMatrix();
+
+        rlgl::rlSetTexture(0);
+    }
+}
+
+fn void draw_text_3d(
+    Font font,
+    String text,
+    Vector3 position,
+    float fontSize,
+    float fontSpacing,
+    float lineSpacing,
+    bool backface,
+    Color tint
+) {
+    float textOffsetY = 0.0f;               // Offset between lines (on line break '\n')
+    float textOffsetX = 0.0f;               // Offset X to next character to draw
+
+    float scale = fontSize/(float)font.baseSize;
+
+    for (usz i = 0; i < text.len;) {
+        // Get next codepoint from byte string and glyph index in font
+        int codepointByteCount = 0;
+        int codepoint = rl::getCodepoint((CChar *)&text[i], &codepointByteCount);
+        int index = rl::getGlyphIndex(font, codepoint);
+
+        // NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
+        // but we need to draw all of the bad bytes using the '?' symbol moving one byte
+        if (codepoint == 0x3f) codepointByteCount = 1;
+
+        if (codepoint == '\n') {
+            // NOTE: Fixed line spacing of 1.5 line-height
+            // TODO: Support custom line spacing defined by user
+            textOffsetY += fontSize + lineSpacing;
+            textOffsetX = 0.0f;
+        } else {
+            if ((codepoint != ' ') && (codepoint != '\t')) {
+                draw_text_codepoint_3d(font, codepoint, (Vector3){ position.x + textOffsetX, position.y, position.z + textOffsetY }, fontSize, backface, tint);
+            }
+
+            if (font.glyphs[index].advanceX == 0) {
+                textOffsetX += (float)font.recs[index].width*scale + fontSpacing;
+            } else {
+                textOffsetX += (float)font.glyphs[index].advanceX*scale + fontSpacing;
+            }
+        }
+
+        i += codepointByteCount;   // Move text bytes counter to next codepoint
+    }
+}
+
+fn void draw_score_text(Vector3 position, ZString text) {
+    Font font = rl::getFontDefault();
+
+    Vector2 font_size = rl::measureTextEx(font, (CChar *)text, 1.6, 0.1);
+
+    rlgl::rlPushMatrix();
+        rlgl::rlTranslatef(position.x + 0.15, position.y + font_size.y/2, position.z + font_size.x/2);
+        rlgl::rlRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        rlgl::rlRotatef(90.0f, 0.0f, 0.0f, -1.0f);
+        draw_text_3d(
+            font,
+            ((ZString)text).str_view(),
+            { 0, 0, 0 },
+            1.6,
+            0.1,
+            0.0,
+            false,
+            rl::BLACK,
+        );
+    rlgl::rlPopMatrix();
+}
 
 fn Vector3 Vector3.add(self, Vector3 other) @operator(+) => { self.x + other.x, self.y + other.y, self.z + other.z };
 fn Vector3 Vector3.sub(self, Vector3 other) @operator(-) => { self.x - other.x, self.y - other.y, self.z - other.z };
@@ -120,8 +269,8 @@ fn void main()
     for (int i = 0; i < 10; i++) {
         targets.push({
             .pos = { -(start + (float)i * gap), 0.25, 0 },
-            .left = -50,
-            .right = 50,
+            .left = rl::getRandomValue(-50, 50),
+            .right = rl::getRandomValue(-50, 50),
         });
     }
 
@@ -155,50 +304,40 @@ fn void main()
                     rl::RED,
                 );
 
+                Vector3 left_offset = { 0, 3.0/2, 5 };
+                Vector3 right_offset = { 0, 3.0/2, -5 };
                 foreach (&target : targets) {
+                    Vector3 left_center = target.pos + left_offset;
+                    Vector3 right_center = target.pos + right_offset;
+
                     rl::drawCube(
-                        target.pos + (Vector3){ 0, 3.0/2, 5 },
+                        left_center,
                         0.25, 3, 10,
                         target.left < 0 ? rl::RED : rl::GREEN,
                     );
 
+                    ZString s = (ZString)rl::textFormat("%+d", target.left);
+                    draw_score_text(left_center, s);
+
                     rl::drawCube(
-                        target.pos + (Vector3){ 0, 3.0/2, -5 },
+                        right_center,
                         0.25, 3, 10,
                         target.right < 0 ? rl::RED : rl::GREEN,
                     );
 
-                    target.pos.x += 0.75;
+                    s = (ZString)rl::textFormat("%+d", target.right);
+                    draw_score_text(right_center, s);
+
+                    target.pos.x += 0.15;
 
                     if (target.pos.x > gap) {
                         target.pos.x = -(start + 9 * gap);
+                        target.left = rl::getRandomValue(-50, 50);
+                        target.right = rl::getRandomValue(-50, 50);
                     }
                 }
 
             rl::endShaderMode(); rl::endMode3D();
-
-            usz max_i = 0;
-            float max = 0;
-            foreach (i, target : targets) {
-                if (target.pos.x > max) {
-                    max = target.pos.x;
-                    max_i = i;
-                }
-            }
-
-            Target target = targets[max_i];
-
-            rl::Vector2 mid = rl::getWorldToScreen(
-                target.pos + (Vector3){ 0, 3.0/2, 5 },
-                camera
-            );
-
-            rl::drawText(
-                rl::textFormat("HI", target.left),
-                (int)mid.x, (int)mid.y,
-                30,
-                rl::BLACK,
-            );
         rl::endDrawing();
     }
 
